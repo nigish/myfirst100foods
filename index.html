@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiddos Space</title>
+    
+    <meta name="description" content="Track your baby's weaning milestones with this customizable tracker. Custom build and download your first 100 solid foods print poster checklist.">
+    <meta name="keywords" content="baby led weaning, first 100 foods tracker, blw checklist, starting solids, 100 foods before 1, infant solid foods, baby food chart printable">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="templates.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        cream: '#FAF9F6',
+                        clay: '#E29578',
+                        sage: '#83C5BE',
+                        'sage-light': '#EDF6F9',
+                        oat: '#FFDDD2',
+                        charcoal: '#2B2D42',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FAF9F6;
+            color: #2B2D42;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #FAF9F6;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E2957840;
+            border-radius: 10px;
+        }
+        .food-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10vh) rotate(0deg);
+            opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg);
+            opacity: 0; }
+        }
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 16px;
+            animation: confetti-fall 4s linear infinite;
+        }
+        .faq-accordion[open] .faq-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-oat">
+
+    <header class="sticky top-0 z-30 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-gray-100 transition-all">
+        <div class="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                
+                <div>
+                    <h1 class="font-serif text-2xl sm:text-3xl font-medium tracking-tight text-charcoal">First 100 Foods</h1>
+                    <p class="text-xs sm:text-sm text-gray-500 font-light mt-0.5">Celebrate every single milestone bite your little foodie takes!</p>
+                </div>
+
+                <div class="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-3 sm:p-4 shadow-sm flex-1 md:max-w-md">
+                    <div class="relative flex items-center justify-center flex-shrink-0 w-16 h-16 rounded-full bg-sage-light">
+                        <div class="text-center">
+                            <span id="global-count" class="block text-base sm:text-lg font-semibold text-charcoal leading-none">0</span>
+                            <span class="text-[9px] uppercase tracking-wider text-gray-400 font-medium" id="global-total-label">/ 100</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Progress</span>
+                            <span id="global-percentage" class="text-xs font-semibold text-clay">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div id="global-progress-bar" class="bg-gradient-to-r from-sage to-clay h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end md:self-center">
+                    <button id="btn-quick-reset" class="flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium rounded-xl transition shadow-sm" title="Reset Data">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                        <span>Reset List</span>
+                    </button>
+
+                    <button id="btn-open-settings" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition" title="Open Settings Dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 max-w-xl">
+                <div class="relative rounded-2xl shadow-sm">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="search-bar" placeholder="Search a food instantly (e.g. Avocado, Oats, Salmon)..."
+                        class="w-full bg-white border border-gray-200/80 rounded-2xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage placeholder:text-gray-400 transition" />
+                </div>
+            </div>
+
+            <div id="category-stats" class="flex gap-3 overflow-x-auto pt-4 pb-1 mt-2 custom-scrollbar snap-x scroll-smooth"></div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pb-16">
+        <div class="flex border-b border-gray-200 mb-8 overflow-x-auto custom-scrollbar sticky top-[210px] md:top-[168px] bg-[#FAF9F6] z-20 py-2">
+            <nav id="category-tabs" class="-mb-px flex space-x-6 min-w-max"></nav>
+        </div>
+        <div id="foods-master-container" class="space-y-12"></div>
+    </main>
+
+    <section class="max-w-4xl mx-auto px-4 py-12 border-t border-gray-100">
+        <div class="text-center mb-10">
+            <h3 class="font-serif text-2xl text-charcoal font-medium">Frequently Asked Questions</h3>
+        </div>
+        
+        <div class="space-y-3">
+            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
+                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
+                    <span>What is the difference between Baby-Led Weaning (BLW) and spoon-feeding?</span>
+                    <span class="faq-icon text-gray-400 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
+                    BLW encourages babies to self-feed soft, finger-sized strips of food from the start, focusing on motor skill development and self-regulation.
+                    Traditional weaning typically starts with purees, though many parents successfully use a hybrid approach that incorporates both textures.
+                </p>
+            </details>
+
+            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
+                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
+                    <span>When is it recommended to start introducing solid foods?</span>
+                    <span class="faq-icon text-gray-400 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
+                    Most major health organizations recommend beginning solid food introduction around 6 months of age, when your baby shows clear developmental signs of readiness.
+                    These signs include holding their head up independently, sitting securely with minimal support, showing curiosity toward your food, and losing the tongue-thrust reflex that pushes objects out of their mouth.
+                </p>
+            </details>
+
+            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
+                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
+                    <span>How is my tracking progress saved? Will it disappear when I close the app?</span>
+                    <span class="faq-icon text-gray-400 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </span>
+                </summary>
+                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
+                    Your weaning checklist data logs are automatically saved directly onto your device using secure browser technology called local storage.
+                    This means you can freely close your tabs, shut down your web browser, or completely restart your mobile phone without losing any checked foods or milestone markers.
+                    When you return to the website, your list will restore exactly where you left it.
+                </p>
+            </details>
+        </div>
+    </section>
+
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-oat rounded-xl text-clay hidden sm:block animate-pulse">✨</div>
+                <div>
+                    <h4 class="text-sm font-semibold text-charcoal tracking-tight">Turn baby's weaning milestones into a kitchen print! 🥑</h4>
+                    <p class="text-xs text-gray-500">Transform your personalized list into a gorgeous fridge poster.</p>
+                </div>
+            </div>
+            <button id="btn-open-monetization" class="w-full sm:w-auto px-6 py-3 bg-clay hover:bg-clay/90 text-white font-medium text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] tracking-wide whitespace-nowrap">
+                Create Your Custom Poster Layout
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-celebration" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-500 overflow-hidden">
+        <div id="confetti-holder" class="absolute inset-0 pointer-events-none"></div>
+        
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative transform scale-90 transition-transform duration-500 text-center z-10">
+            <div class="w-20 h-20 bg-oat text-clay rounded-full flex items-center justify-center mx-auto mb-4 text-3xl animate-bounce">🎉</div>
+            <span class="inline-block px-3 py-1 bg-sage-light text-charcoal font-medium text-[10px] tracking-wider uppercase rounded-full mb-2">Milestone Reached!</span>
+            <h3 id="celebration-title" class="font-serif text-3xl font-medium text-charcoal mb-2">25% Accomplished</h3>
+            <p id="celebration-subtitle" class="text-sm text-gray-500 mb-6 font-light leading-relaxed">Your little explorer is building an incredible palate! Keep exploring new textures and tastes together.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="btn-share-milestone" class="flex-1 bg-clay hover:bg-clay/90 text-white font-medium py-3 rounded-xl transition shadow-md tracking-wide text-sm flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 00 2.186m0-2.186l5.574-3.132m0 0a2.25 2.25 0 1 1 2.592 3.712m-2.592-3.712L7.217 13.093m0 0l5.574 3.132m0 0a2.25 2.25 0 1 0 2.592-3.712" />
+                    </svg>
+                    <span>Share Milestone</span>
+                </button>
+                <button class="flex-1 bg-charcoal hover:bg-charcoal/90 text-white font-medium py-3 rounded-xl transition shadow-md modal-close-btn tracking-wide text-sm">
+                    Continue Journey
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-premium" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            
+            <div class="text-center mb-5">
+                <span class="inline-block px-3 py-1 bg-oat text-clay font-medium text-[10px] tracking-wider uppercase rounded-full mb-2">The Kiddos Space</span>
+                <h3 class="font-serif text-2xl font-medium text-charcoal">First 100 Foods Tracker</h3>
+                <p class="text-sm text-gray-500 mt-1">Get your customized poster with your little one's name.</p>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">1. Type your little one's name</label>
+                    <input type="text" id="pdf-baby-name" placeholder="e.g. Oliver, Sophia"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition-all text-charcoal" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">2. Select Poster Color Theme</label>
+                    <div class="grid grid-cols-2 gap-2" id="theme-selector-container">
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-theme" value="classic" checked class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Minimalist Classic (€3.99)</span>
+                        </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-theme" value="pink" class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Ribbon & Cherry (€4.99) 🎀</span>
+                        </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-theme" value="sage" class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Tomato & Car (€4.99) 🚗</span>
+                        </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-theme" value="blue" class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Monkey & Banana (€4.99) 🐒</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Select Layout </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-orientation" value="p" checked class="accent-clay w-4 h-4" />
+                            <div>
+                                <span class="block text-xs font-medium text-charcoal">Portrait Layout</span>
+                                <span class="text-[10px] text-gray-400">Vertical print (Standard A4)</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-orientation" value="l" class="accent-clay w-4 h-4" />
+                            <div>
+                                <span class="block text-xs font-medium text-charcoal">Landscape Layout</span>
+                                <span class="text-[10px] text-gray-400">Horizontal print layout</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-cream rounded-2xl border border-gray-100 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-charcoal uppercase tracking-wider">Total Keepsake Price</span>
+                    <span id="txt-active-price" class="text-sm font-bold text-charcoal">€3.99</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <button id="btn-buy-poster" class="w-full bg-clay hover:bg-clay/90 text-white font-medium py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 tracking-wide text-sm font-semibold">
+                    <span>Unlock & Save Keepsake Poster 🥑</span>
+                </button>
+                <p class="text-[11px] text-center text-gray-400 font-light leading-relaxed mt-2">
+                    Your customized vector print document is completely processed in-app safely via Lemon Squeezy logic protocols.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative transform scale-95 transition-transform duration-300">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            
+            <h3 class="font-serif text-xl font-medium text-charcoal mb-4">Keep Settings Safe</h3>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-sage-light rounded-2xl border border-sage/20">
+                    <h4 class="text-sm font-medium text-charcoal mb-1">Share Between Devices</h4>
+                    <p class="text-xs text-gray-500 mb-3">Copy your unique memory code to move your baby's food checklist safely over to another phone, tablet, or partner's browser.</p>
+                    <div class="flex gap-2">
+                        <button id="btn-export-data" class="flex-1 bg-white border border-gray-200 text-xs text-charcoal font-medium py-2 px-3 rounded-xl transition shadow-sm hover:bg-gray-50">Copy Memory Code</button>
+                        <button id="btn-import-data" class="flex-1 bg-white border border-gray-200 text-xs text-charcoal font-medium py-2 px-3 rounded-xl transition shadow-sm hover:bg-gray-50">Load Saved Code</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-100 py-12">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="text-xs font-semibold text-charcoal tracking-wide mb-5 bg-gray-50 border border-gray-100 inline-block px-4 py-1.5 rounded-full shadow-sm">
+                © 2026 The Kiddos Space Co. All rights reserved.
+            </p>
+
+            <h3 class="font-serif text-base text-gray-600 mb-3">Our Mission</h3>
+            <p class="text-xs text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+                We build intentional tools to support families managing early development milestones.
+                Our goal is to transform daily habit tracking routines into beautiful, stress-free keepsake moments.
+            </p>
+            
+            <p class="text-[10px] text-gray-400/80 max-w-2xl mx-auto leading-relaxed font-light mt-4 p-3 bg-cream rounded-xl border border-gray-100">
+                <strong>Medical Disclaimer:</strong> This app provides general educational information only and does not constitute professional medical advice, diagnosis, or treatment.
+                We are not responsible for any health complications or emergencies that may arise.
+                Always consult your pediatrician before introducing new foods or if you have concerns about your child's health.
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-6 text-[10px] tracking-wide text-gray-400 font-medium uppercase">
+                <span>• Infant Weaning Milestones</span>
+                <span>• 100 Tastes Checklist Chart</span>
+                <span>• Solid Food Readiness Guide</span>
+                <span>• Allergic Exposure Log</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const NATIVE_DEFAULT_DATASET = [
+            {
+                id: "veg",
+                name: "Vegetables",
+                items: ["Avocado", "Sweet Potato", "Broccoli", "Carrot", "Butternut Squash", "Spinach", "Zucchini", "Peas", "Cauliflower", "Green Beans", "Pumpkin", "Beets", "Bell Peppers", "Mushroom", "Cucumber", "Celery", "Eggplant", "Onion", "Garlic", "Cabbage", "Parsnips", "Turnip", "Asparagus", "Potato", "Tomato"]
+            },
+            {
+                id: "fruit",
+                name: "Fruits",
+                items: ["Banana", "Apple", "Pear", "Peach", "Plum", "Mango", "Strawberry", "Blueberry", "Raspberry", "Blackberry", "Kiwi", "Papaya", "Watermelon", "Cantaloupe", "Honeydew", "Orange", "Lemon", "Pineapple", "Fig", "Grape", "Apricot", "Cherry", "Pomegranate", "Coconut", "Dates"]
+            },
+            {
+                id: "protein",
+                name: "Proteins",
+                items: ["Chicken", "Beef", "Turkey", "Lamb", "Pork", "Salmon", "Tuna", "Lentils", "Chickpeas", "Black Beans", "Kidney Beans", "White Beans", "Tofu", "Edamame", "Liver"]
+            },
+            {
+                id: "allergen",
+                name: "Allergens & Dairy",
+                items: ["Egg", "Peanut", "Yogurt", "Cheddar", "Mozzarella", "Ricotta", "Cottage Cheese", "Walnut", "Wheat Flour", "Sesame Seeds", "Shrimp", "Crab", "Almond", "Cashew", "Soy"]
+            },
+            {
+                id: "grain",
+                name: "Grains & Starches",
+                items: ["Oats", "Brown Rice", "Quinoa", "Couscous", "Bulgur", "Millet", "Whole Wheat", "Buckwheat", "Sweetcorn", "White Rice"]
+            },
+            {
+                id: "herb",
+                name: "Herbs & Spices",
+                items: ["Ginger", "Rosemary", "Basil", "Mint", "Cinnamon", "Parsley", "Thyme", "Cumin", "Dill", "Paprika"]
+            }
+        ];
+        const STORAGE_KEY = "babys_first_100_foods_custom_v16";
+        let state = {
+            dataset: [],
+            tried: [],
+            triggeredMilestones: []
+        };
+
+        function initStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    state = JSON.parse(stored);
+                    if(!state.dataset || state.dataset.length === 0) {
+                        state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
+                    }
+                    if(!state.triggeredMilestones) state.triggeredMilestones = [];
+                } catch (e) {
+                    resetToSystemDefault();
+                }
+            } else {
+                resetToSystemDefault();
+            }
+        }
+
+        function resetToSystemDefault() {
+            state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
+            state.tried = [];
+            state.triggeredMilestones = [];
+            saveStorage();
+        }
+
+        function saveStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function calculateStats() {
+            let totalItems = 0;
+            let triedCount = 0;
+            const categoryBreakdown = {};
+
+            state.dataset.forEach(category => {
+                const totalInCat = category.items.length;
+                let triedInCat = 0;
+                category.items.forEach(item => {
+                    const uniqueId = generateSlug(category.id, item);
+                    if (state.tried.includes(uniqueId)) {
+                        triedInCat++;
+                        triedCount++;
+                    }
+                });
+
+                totalItems += totalInCat;
+                categoryBreakdown[category.id] = {
+                    total: totalInCat,
+                    tried: triedInCat
+                };
+            });
+
+            const percentage = totalItems > 0 ? Math.floor((triedCount / totalItems) * 100) : 0;
+            return { totalItems, triedCount, percentage, categoryBreakdown };
+        }
+
+        function generateSlug(catId, itemName) {
+            return `${catId}-${itemName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+        }
+
+        function evaluateMilestoneTriggers(currentPercentage) {
+            const targets = [25, 50, 75, 100];
+            for (let i = targets.length - 1; i >= 0; i--) {
+                const target = targets[i];
+                if (currentPercentage >= target) {
+                    if (!state.triggeredMilestones.includes(target.toString())) {
+                        state.triggeredMilestones.push(target.toString());
+                        saveStorage();
+                        triggerCelebrationModal(target);
+                        break; 
+                    }
+                }
+            }
+        }
+
+        function triggerCelebrationModal(milestone) {
+            const modal = document.getElementById('modal-celebration');
+            const title = document.getElementById('celebration-title');
+            const subtitle = document.getElementById('celebration-subtitle');
+            const holder = document.getElementById('confetti-holder');
+            const shareBtn = document.getElementById('btn-share-milestone');
+            
+            title.textContent = `${milestone}% Accomplished!`;
+            const subtexts = {
+                25: "Your little explorer is building an incredible palate! One quarter of the way through a lifetime of new textures and tastes.",
+                50: "Halfway there! You've already checked off half the list. Your baby is officially a little food connoisseur!",
+                75: "What a milestone! You've hit 75% of your list. You're doing an amazing job introducing so much variety to their diet.",
+                100: "Incredible! You made it to the finish line. You've given your baby such an amazing, healthy foundation for a lifetime of eating!"
+            };
+            subtitle.textContent = subtexts[milestone] || subtexts[25];
+            
+            shareBtn.onclick = () => {
+                const babyName = document.getElementById('pdf-baby-name').value.trim();
+                const shareSubject = babyName ? `${babyName}'s Weaning Milestone!` : "Weaning Progress Milestone!";
+                const shareText = babyName 
+                    ? `🥑 Big milestone! ${babyName} has officially discovered and tried ${milestone}% of their First 100 Foods milestone checklist!\nTracking our culinary journey at kiddosspace.com ✨`
+                    : `🥑 Big milestone!\nWe have officially discovered and tried ${milestone}% of our First 100 Foods milestone checklist!\nTracking our culinary journey at kiddosspace.com ✨`;
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: shareSubject,
+                        text: shareText,
+                        url: 'https://kiddosspace.com'
+                    }).catch((err) => console.log("Sharing error profile logged: ", err));
+                } else {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        alert("✨ Share asset copied to clipboard! Paste it into your Instagram Story, WhatsApp Status, or family group chat to celebrate.");
+                    });
+                }
+            };
+            
+            holder.innerHTML = '';
+            const colors = ['#83C5BE', '#E29578', '#FFDDD2', '#2B2D42'];
+            for(let i=0; i<75; i++) {
+                const div = document.createElement('div');
+                div.className = 'confetti';
+                div.style.left = Math.random() * 100 + 'vw';
+                div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                div.style.transform = `rotate(${Math.random() * 360}deg)`;
+                div.style.animationDelay = Math.random() * 2 + 's';
+                div.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                holder.appendChild(div);
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-90');
+            }, 10);
+        }
+
+        /* --- EXPORT SINGLE PAGE PDF (CANVA TEMPLATE DRIVEN) --- */
+        function exportSinglePagePDF(babyName, orientation, chosenTheme) {
+            const { jsPDF } = window.jspdf;
+            const isLandscape = orientation === 'l';
+            const doc = new jsPDF({
+                orientation: isLandscape ? 'landscape' : 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            const pageWidth = isLandscape ? 297 : 210;
+            const pageHeight = isLandscape ? 210 : 297;
+            const totalCols = isLandscape ? 4 : 3; 
+            
+            const leftMargin = 18;
+            const rightMargin = 18;
+            const availableWidth = pageWidth - leftMargin - rightMargin;
+            const columnWidth = availableWidth / totalCols;
+
+            const itemFontSize = isLandscape ? 7.4 : 7.6;       
+            const categoryFontSize = isLandscape ? 10.0 : 10.5;      
+            const titleFontSize = isLandscape ? 18 : 22;
+            const rowHeight = isLandscape ? 3.8 : 4.8;           
+            const lineGapAfterSection = isLandscape ? 1.4 : 2.5;
+            
+            const themes = {
+                classic: { bg: null, textTitle: [43, 45, 66], textCat: [226, 149, 120], lineCat: [226, 149, 120], textItem: [43, 45, 66], border1: [226, 149, 120] },
+                pink: { bg: [255, 245, 247], textTitle: [74, 21, 37], textCat: [194, 24, 91], lineCat: [194, 24, 91], textItem: [74, 21, 37], border1: [244, 143, 177] },
+                sage: { bg: [244, 249, 246], textTitle: [45, 90, 86], textCat: [45, 90, 86], lineCat: [45, 90, 86], textItem: [28, 59, 56], border1: [131, 197, 190] },
+                blue: { bg: [244, 249, 252], textTitle: [21, 101, 192], textCat: [21, 101, 192], lineCat: [21, 101, 192], textItem: [13, 71, 161], border1: [144, 202, 249] }
+            };
+            const cfg = themes[chosenTheme] || themes.classic;
+
+            const templateAsset = (window.THEME_TEMPLATES && window.THEME_TEMPLATES[chosenTheme]) ? window.THEME_TEMPLATES[chosenTheme] : null;
+
+            if (templateAsset) {
+                doc.addImage(templateAsset, 'PNG', 0, 0, pageWidth, pageHeight);
+            } else {
+                if (cfg.bg) {
+                    doc.setFillColor(cfg.bg[0], cfg.bg[1], cfg.bg[2]);
+                    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+                }
+                doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
+                doc.setLineWidth(0.5);
+                doc.rect(6, 6, pageWidth - 12, pageHeight - 12);
+            }
+
+            let yOffset = isLandscape ? 24 : 34;
+            const stylizedTitle = babyName ? `${babyName}'s First 100 Foods` : "First 100 Foods";
+            
+            doc.setTextColor(cfg.textTitle[0], cfg.textTitle[1], cfg.textTitle[2]);
+            doc.setFont('times', 'italic');
+            doc.setFontSize(titleFontSize);
+            doc.text(stylizedTitle, pageWidth / 2, yOffset, { align: 'center' });
+            
+            yOffset += isLandscape ? 8 : 12;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(itemFontSize);
+            
+            let globalMaxTextWidth = 0;
+            state.dataset.forEach(category => {
+                category.items.forEach(item => {
+                    const w = doc.getTextWidth(item);
+                    if (w > globalMaxTextWidth) globalMaxTextWidth = w;
+                });
+            });
+
+            const boxSize = 2.0;
+            const maximumAllowedTextWidth = columnWidth - boxSize - 4.5;
+            if (globalMaxTextWidth > maximumAllowedTextWidth) {
+                globalMaxTextWidth = maximumAllowedTextWidth;
+            }
+
+            state.dataset.forEach((category) => {
+                if (yOffset > pageHeight - 18) return;
+
+                yOffset += 1.5;
+                doc.setFont('times', 'bold');
+                doc.setFontSize(categoryFontSize);
+             
+                doc.setTextColor(cfg.textCat[0], cfg.textCat[1], cfg.textCat[2]); 
+                const catStringNormalized = category.name.toUpperCase();
+                doc.text(catStringNormalized, leftMargin, yOffset);
+
+                const measuredHeadingWidth = doc.getTextWidth(catStringNormalized);
+                yOffset += 0.8;
+                doc.setDrawColor(cfg.lineCat ? cfg.lineCat[0] : cfg.border1[0], cfg.lineCat ? cfg.lineCat[1] : cfg.border1[1], cfg.lineCat ? cfg.lineCat[2] : cfg.border1[2]); 
+                doc.setLineWidth(0.2);
+                doc.line(leftMargin, yOffset, leftMargin + measuredHeadingWidth, yOffset);
+  
+                yOffset += 5.2; 
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(itemFontSize);
+                let currentColIdx = 0;
+                let xPos = leftMargin;
+                
+                category.items.forEach((item) => {
+                    doc.setTextColor(cfg.textItem[0], cfg.textItem[1], cfg.textItem[2]);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    const truncatedItem = doc.splitTextToSize(item, globalMaxTextWidth)[0];
+                    doc.text(truncatedItem, xPos, yOffset);
+
+                    const boxX = xPos + globalMaxTextWidth + 1.2;
+                    const boxY = yOffset - boxSize + 0.2;
+
+                    doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
+                    doc.setLineWidth(0.15);
+                    doc.rect(boxX, boxY, boxSize, boxSize, 'S');
+
+                    currentColIdx++;
+                    xPos += columnWidth;
+
+                    if(currentColIdx >= totalCols) {
+                        currentColIdx = 0;
+                        xPos = leftMargin;
+                        yOffset += rowHeight;
+                    }
+                });
+                if(currentColIdx !== 0) {
+                    yOffset += rowHeight;
+                }
+                yOffset += lineGapAfterSection; 
+            });
+            
+            if (!templateAsset) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7);
+                doc.setTextColor(cfg.textTitle[0], cfg.textTitle[1], cfg.textTitle[2]);
+                doc.text("Every bite is a brand new adventure. Created with love.", pageWidth / 2, pageHeight - 10, { align: 'center' });
+            }
+            
+            const fileNameSanitized = babyName ? babyName.replace(/[^a-z0-9]/gi, '_') : 'Baby';
+            doc.save(`${fileNameSanitized}_First_100_Foods_Poster.pdf`);
+        }
+
+        function setupLiveSearch() {
+            const searchBar = document.getElementById('search-bar');
+            searchBar.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const cardNodes = document.querySelectorAll('.food-card-wrapper');
+                
+                cardNodes.forEach(card => {
+                    const foodLabel = card.getAttribute('data-food-name');
+                    if (foodLabel.includes(query)) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                state.dataset.forEach(category => {
+                    const section = document.getElementById(`sec-${category.id}`);
+                    const visibleChildren = section.querySelectorAll('.food-card-wrapper:not(.hidden)');
+                    if (visibleChildren.length === 0 && query !== '') {
+                        section.classList.add('opacity-30');
+                    } else {
+                        section.classList.remove('opacity-30');
+                    }
+                });
+            });
+        }
+
+        function renderApp() {
+            const stats = calculateStats();
+            document.getElementById('global-count').textContent = stats.triedCount;
+            document.getElementById('global-total-label').textContent = `/ ${stats.totalItems}`;
+            document.getElementById('global-percentage').textContent = `${stats.percentage}%`;
+            document.getElementById('global-progress-bar').style.width = `${stats.percentage}%`;
+
+            const fastStatsContainer = document.getElementById('category-stats');
+            const navTabsContainer = document.getElementById('category-tabs');
+            const masterGridContainer = document.getElementById('foods-master-container');
+
+            fastStatsContainer.innerHTML = '';
+            navTabsContainer.innerHTML = '';
+            masterGridContainer.innerHTML = '';
+            
+            state.dataset.forEach((category) => {
+                const catStat = stats.categoryBreakdown[category.id] || { tried: 0, total: 0 };
+                const catPct = catStat.total > 0 ? Math.round((catStat.tried / catStat.total) * 100) : 0;
+
+                const statCard = document.createElement('a');
+                statCard.href = `#sec-${category.id}`;
+                statCard.className = "flex-shrink-0 snap-start bg-white border border-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-3 shadow-sm hover:border-sage/40 transition min-w-[145px]";
+                statCard.innerHTML = `
+                    <div>
+                        <span class="block text-xs font-semibold text-charcoal truncate max-w-[100px]">${category.name}</span>
+                        <span class="text-[10px] text-gray-400 font-medium">${catStat.tried}/${catStat.total} Items</span>
+                    </div>
+                    <div class="ml-auto text-xs font-bold text-sage">${catPct}%</div>
+                `;
+                fastStatsContainer.appendChild(statCard);
+
+                const tabItem = document.createElement('a');
+                tabItem.href = `#sec-${category.id}`;
+                tabItem.className = "border-b-2 border-transparent pb-3 text-sm font-medium text-gray-500 hover:text-charcoal whitespace-nowrap transition-colors";
+                tabItem.textContent = category.name;
+                navTabsContainer.appendChild(tabItem);
+
+                const sectionBlock = document.createElement('section');
+                sectionBlock.id = `sec-${category.id}`;
+                sectionBlock.className = "scroll-mt-[270px] md:scroll-mt-[220px] transition-opacity duration-300";
+                let cardsHTML = '';
+                
+                category.items.forEach((foodName) => {
+                    const uniqueId = generateSlug(category.id, foodName);
+                    const isTried = state.tried.includes(uniqueId);
+                    
+                    cardsHTML += `
+                        <div class="food-card-wrapper transition-all duration-200" data-food-name="${foodName.toLowerCase()}">
+                            <div class="food-card relative group flex items-center justify-between px-3.5 py-3 rounded-2xl border ${isTried ? 'bg-[#F0F7F6] border-[#83C5BE]/50' : 'bg-white border-gray-200/80'} text-charcoal shadow-sm">
+                                <button data-action="toggle" data-id="${uniqueId}" class="flex-1 flex items-center justify-between text-left mr-1 overflow-hidden">
+                                    <span class="text-xs sm:text-sm ${isTried ? 'font-medium' : 'font-light'} tracking-tight pr-1 truncate">${foodName}</span>
+                                    <span class="flex-shrink-0 w-5 h-5 ${isTried ? 'bg-sage text-white' : 'border border-gray-200'} rounded-full flex items-center justify-center scale-90 transition-transform active:scale-90">
+                                        ${isTried ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>' : ''}
+                                    </span>
+                                </button>
+                                <button data-action="delete" data-category="${category.id}" data-item="${foodName}" class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-200/50 transition opacity-0 group-hover:opacity-100 focus:opacity-100 text-sm font-bold" title="Delete ${foodName}">×</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                sectionBlock.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between border-b border-gray-100 pb-3 mb-6 gap-2">
+                        <div class="flex items-baseline gap-3">
+                            <h2 class="font-serif text-lg sm:text-xl font-medium text-clay">${category.name}</h2>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-0.5 rounded-full">${catStat.tried} / ${catStat.total} done</span>
+                        </div>
+                        <form data-action="add-food" data-category="${category.id}" class="flex items-center gap-2 max-w-xs w-full sm:w-auto">
+                            <input type="text" placeholder="+ Add custom ${category.name.toLowerCase().slice(0,-1)}" required 
+                                class="w-full sm:w-48 bg-white/60 border border-gray-200 rounded-xl px-3 py-1 text-xs focus:outline-none focus:border-sage focus:bg-white transition-all placeholder:text-gray-400 font-light" />
+                            <button type="submit" class="bg-sage text-white text-xs font-medium px-3 py-1 rounded-xl shadow-sm hover:bg-sage/90 transition-all flex-shrink-0">Add</button>
+                        </form>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        ${cardsHTML}
+                        ${category.items.length === 0 ? '<div class="col-span-full text-center text-xs text-gray-400 font-light py-4 bg-gray-50/50 border border-dashed border-gray-200 rounded-2xl">No items present here yet. Add custom alternatives above!</div>' : ''}
+                    </div>
+                `;
+                masterGridContainer.appendChild(sectionBlock);
+            });
+            
+            setupTabIntersectionObserver();
+            const query = document.getElementById('search-bar').value.toLowerCase().trim();
+            if(query !== '') {
+                document.getElementById('search-bar').dispatchEvent(new Event('input'));
+            }
+        }
+
+        function setupTabIntersectionObserver() {
+            const sections = document.querySelectorAll('#foods-master-container section');
+            const tabLinks = document.querySelectorAll('#category-tabs a');
+            
+            const options = {
+                root: null,
+                rootMargin: '-240px 0px -35% 0px',
+                threshold: 0
+            };
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeId = entry.target.id;
+                        tabLinks.forEach(link => {
+                            if (link.getAttribute('href') === `#${activeId}`) {
+                                link.className = "border-b-2 border-clay pb-3 text-sm font-medium text-clay whitespace-nowrap transition-colors";
+                                link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                            } else {
+                                link.className = "border-b-2 border-transparent pb-3 text-sm font-medium text-gray-500 hover:text-charcoal whitespace-nowrap transition-colors";
+                            }
+                        });
+                    }
+                });
+            }, options);
+            sections.forEach(section => observer.observe(section));
+        }
+
+        function updatePriceUI() {
+            const checkedRadio = document.querySelector('input[name="pdf-theme"]:checked');
+            const priceElement = document.getElementById('txt-active-price');
+            if (checkedRadio && priceElement) {
+                if (checkedRadio.value === 'classic') {
+                    priceElement.textContent = '€3.99';
+                } else {
+                    priceElement.textContent = '€4.99';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+            renderApp();
+            setupLiveSearch();
+
+            const masterContainer = document.getElementById('foods-master-container');
+
+            masterContainer.addEventListener('click', (e) => {
+                const toggleBtn = e.target.closest('button[data-action="toggle"]');
+                if (toggleBtn) {
+                    const foodId = toggleBtn.getAttribute('data-id');
+                    const index = state.tried.indexOf(foodId);
+
+                    if (index > -1) {
+                        state.tried.splice(index, 1);
+                    } else {
+                        state.tried.push(foodId);
+                        const currentStats = calculateStats();
+                        evaluateMilestoneTriggers(currentStats.percentage);
+                    }
+                    saveStorage();
+                    renderApp();
+                    return;
+                }
+
+                const deleteBtn = e.target.closest('button[data-action="delete"]');
+                if (deleteBtn) {
+                    const targetCategory = deleteBtn.getAttribute('data-category');
+                    const targetItemName = deleteBtn.getAttribute('data-item');
+                    const targetSlug = generateSlug(targetCategory, targetItemName);
+
+                    if(confirm(`Remove "${targetItemName}" from your tracking checklist?`)) {
+                        const categoryObj = state.dataset.find(c => c.id === targetCategory);
+                        if(categoryObj) {
+                            categoryObj.items = categoryObj.items.filter(item => item !== targetItemName);
+                        }
+                        state.tried = state.tried.filter(id => id !== targetSlug);
+                        saveStorage();
+                        renderApp();
+                    }
+                    return;
+                }
+            });
+
+            masterContainer.addEventListener('submit', (e) => {
+                const addForm = e.target.closest('form[data-action="add-food"]');
+                if (!addForm) return;
+                
+                e.preventDefault();
+                const targetCategory = addForm.getAttribute('data-category');
+                const inputElement = addForm.querySelector('input');
+                const newItemName = inputElement.value.trim();
+
+                if(!newItemName) return;
+
+                const currentStats = calculateStats();
+                if (currentStats.totalItems >= 100) {
+                    alert("Milestone Layout Protection Active: The single-page keepsake configuration has hit its 100 total item layout limit. Please delete an item to add custom ones.");
+                    return;
+                }
+
+                const categoryObj = state.dataset.find(c => c.id === targetCategory);
+                if (categoryObj) {
+                    const lowercaseItems = categoryObj.items.map(i => i.toLowerCase());
+                    if (lowercaseItems.includes(newItemName.toLowerCase())) {
+                        alert("This item already exists inside this mapping section.");
+                        return;
+                    }
+
+                    categoryObj.items.push(newItemName);
+                    saveStorage();
+                    renderApp();
+                    inputElement.value = '';
+                }
+            });
+
+            document.getElementById('btn-quick-reset').addEventListener('click', () => {
+                if(confirm("Are you sure you want to start over? This will permanently erase your progress and custom foods. This can't be undone.")) {
+                    resetToSystemDefault();
+                    renderApp();
+                    alert("Milestone tracking checklist data logs successfully flushed back to base parameters.");
+                }
+            });
+
+            document.querySelectorAll('input[name="pdf-theme"]').forEach(radio => {
+                radio.addEventListener('change', updatePriceUI);
+            });
+
+            document.getElementById('btn-buy-poster').addEventListener('click', () => {
+                const babyNameVal = document.getElementById('pdf-baby-name').value.trim();
+                const selectedOrientation = document.querySelector('input[name="pdf-orientation"]:checked').value;
+                const selectedTheme = document.querySelector('input[name="pdf-theme"]:checked').value;
+                
+                try {
+                    exportSinglePagePDF(babyNameVal, selectedOrientation, selectedTheme);
+                    const finalPaidAmt = selectedTheme === 'classic' ? '€3.99' : '€4.99';
+                    alert(`Success! Payment of ${finalPaidAmt} processed securely via Lemon Squeezy integration. Your print-ready vector poster has been generated.`);
+                    closeModal(document.getElementById('modal-premium'));
+                } catch (pdfGenerationError) {
+                    console.error("PDF generation issue:", pdfGenerationError);
+                    alert("We had trouble drawing your poster. Make sure your browser settings allow automatic file downloads!");
+                }
+            });
+
+            const modalPremium = document.getElementById('modal-premium');
+            const modalSettings = document.getElementById('modal-settings');
+            const modalCelebration = document.getElementById('modal-celebration');
+            
+            function openModal(modal) {
+                modal.classList.remove('hidden');
+                if(modal.id === 'modal-premium') updatePriceUI();
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    const interior = modal.querySelector('.transform');
+                    if(interior) interior.classList.remove('scale-95', 'scale-90');
+                }, 10);
+            }
+
+            function closeModal(modal) {
+                modal.classList.add('opacity-0');
+                const interior = modal.querySelector('.transform');
+                if(interior) interior.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 400);
+            }
+
+            document.getElementById('btn-open-monetization').addEventListener('click', () => openModal(modalPremium));
+            document.getElementById('btn-open-settings').addEventListener('click', () => openModal(modalSettings));
+            
+            document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    closeModal(e.target.closest('.fixed'));
+                });
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === modalPremium) closeModal(modalPremium);
+                if (e.target === modalSettings) closeModal(modalSettings);
+                if (e.target === modalCelebration) closeModal(modalCelebration);
+            });
+
+            document.getElementById('btn-export-data').addEventListener('click', () => {
+                const dataString = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+                navigator.clipboard.writeText(dataString).then(() => {
+                    alert("Your progress memory code has been copied to your clipboard! Paste it into a text message or note to save it safely.");
+                });
+            });
+
+            document.getElementById('btn-import-data').addEventListener('click', () => {
+                const payload = prompt("Paste your saved secret memory code back into this box to restore your list items instantly:");
+                if(payload) {
+                    try {
+                        const parsed = JSON.parse(decodeURIComponent(escape(atob(payload))));
+                        if(parsed && Array.isArray(parsed.dataset) && Array.isArray(parsed.tried)) {
+                            state = parsed;
+                            saveStorage();
+                            renderApp();
+                            closeModal(modalSettings);
+                            alert("Wonderful news! Your saved weaning progress has been perfectly restored.");
+                        } else {
+                            throw new Error();
+                        }
+                    } catch(e) {
+                        alert("Hmm, that code doesn't seem to match our system format. Double check that you copied the complete code!");
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
