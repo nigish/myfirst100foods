@@ -525,30 +525,50 @@
             }, 10);
         }
 
-        /* --- EXPORT SINGLE PAGE PDF (CANVA TEMPLATE DRIVEN) --- */
+        /* --- STABLE CONTRAST OPTIMIZED PRINT PATTERN SYSTEM --- */
         function exportSinglePagePDF(babyName, orientation, chosenTheme) {
             const { jsPDF } = window.jspdf;
             const isLandscape = orientation === 'l';
+            
             const doc = new jsPDF({
                 orientation: isLandscape ? 'landscape' : 'portrait',
                 unit: 'mm',
                 format: 'a4'
             });
+
             const pageWidth = isLandscape ? 297 : 210;
             const pageHeight = isLandscape ? 210 : 297;
-            const totalCols = isLandscape ? 4 : 3; 
-            
-            const leftMargin = 18;
-            const rightMargin = 18;
+
+            // 1. CHOOSE SEPARATE TUNING PARAMETERS BASED ON ORIENTATION
+            let totalCols, leftMargin, rightMargin, itemFontSize, categoryFontSize, titleFontSize, rowHeight, lineGapAfterSection, yOffset;
+
+            if (isLandscape) {
+                // Landscape Custom Specifications (Horizontal A4)
+                totalCols = 4;
+                leftMargin = 26;  // Pushed inward to avoid Canva side illustrations
+                rightMargin = 26;
+                itemFontSize = 7.5;
+                categoryFontSize = 10.0;
+                titleFontSize = 18;
+                rowHeight = 4.0;
+                lineGapAfterSection = 1.5;
+                yOffset = 26;     // Lowered to avoid top illustrations
+            } else {
+                // Portrait Custom Specifications (Vertical A4)
+                totalCols = 3;
+                leftMargin = 22;  // Pushed inward to center the columns perfectly
+                rightMargin = 22;
+                itemFontSize = 8.0;
+                categoryFontSize = 11.0;
+                titleFontSize = 22;
+                rowHeight = 5.0;
+                lineGapAfterSection = 3.0;
+                yOffset = 36;     // Lowered significantly to clear the deep ribbon header art
+            }
+
             const availableWidth = pageWidth - leftMargin - rightMargin;
             const columnWidth = availableWidth / totalCols;
 
-            const itemFontSize = isLandscape ? 7.4 : 7.6;       
-            const categoryFontSize = isLandscape ? 10.0 : 10.5;      
-            const titleFontSize = isLandscape ? 18 : 22;
-            const rowHeight = isLandscape ? 3.8 : 4.8;           
-            const lineGapAfterSection = isLandscape ? 1.4 : 2.5;
-            
             const themes = {
                 classic: { bg: null, textTitle: [43, 45, 66], textCat: [226, 149, 120], lineCat: [226, 149, 120], textItem: [43, 45, 66], border1: [226, 149, 120] },
                 pink: { bg: [255, 245, 247], textTitle: [74, 21, 37], textCat: [194, 24, 91], lineCat: [194, 24, 91], textItem: [74, 21, 37], border1: [244, 143, 177] },
@@ -557,6 +577,7 @@
             };
             const cfg = themes[chosenTheme] || themes.classic;
 
+            // 2. RENDERS THE SEPARATED TEMPLATE FROM YOUR BACKGROUND SCRIPT
             const templateAsset = (window.THEME_TEMPLATES && window.THEME_TEMPLATES[chosenTheme]) ? window.THEME_TEMPLATES[chosenTheme] : null;
 
             if (templateAsset) {
@@ -571,7 +592,7 @@
                 doc.rect(6, 6, pageWidth - 12, pageHeight - 12);
             }
 
-            let yOffset = isLandscape ? 24 : 34;
+            // 3. TITLE AND TEXT DRAWING LOOPS WITH STABLE CONTRAST
             const stylizedTitle = babyName ? `${babyName}'s First 100 Foods` : "First 100 Foods";
             
             doc.setTextColor(cfg.textTitle[0], cfg.textTitle[1], cfg.textTitle[2]);
@@ -649,16 +670,68 @@
                 yOffset += lineGapAfterSection; 
             });
             
-            if (!templateAsset) {
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(7);
-                doc.setTextColor(cfg.textTitle[0], cfg.textTitle[1], cfg.textTitle[2]);
-                doc.text("Every bite is a brand new adventure. Created with love.", pageWidth / 2, pageHeight - 10, { align: 'center' });
-            }
-            
             const fileNameSanitized = babyName ? babyName.replace(/[^a-z0-9]/gi, '_') : 'Baby';
             doc.save(`${fileNameSanitized}_First_100_Foods_Poster.pdf`);
         }
+
+        // ... Keep existing setupLiveSearch(), renderApp(), setupTabIntersectionObserver() functions intact ...
+
+        function updatePriceUI() {
+            const checkedRadio = document.querySelector('input[name="pdf-theme"]:checked');
+            const priceElement = document.getElementById('txt-active-price');
+            if (checkedRadio && priceElement) {
+                if (checkedRadio.value === 'classic') {
+                    priceElement.textContent = '€3.99';
+                } else {
+                    priceElement.textContent = '€4.99';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+            renderApp();
+            setupLiveSearch();
+
+            // --- SERVERLESS LEMON SQUEEZY REDIRECT CHECKOUT FLOW ---
+            // Check if the user was just redirected back after a successful purchase
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('status') === 'success') {
+                const pendingJob = localStorage.getItem('checkout_pending_poster');
+                if (pendingJob) {
+                    try {
+                        const jobData = JSON.parse(pendingJob);
+                        // Instantly process and download the centralized layout configuration
+                        exportSinglePagePDF(jobData.name, jobData.orientation, jobData.theme);
+                        // Wipe payload from memory cache so refreshes don't cause duplicate downloads
+                        localStorage.removeItem('checkout_pending_poster');
+                        // Clear the success parameter clean from the browser's address bar look
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (e) {
+                        console.error("Error processing your keepsake output:", e);
+                    }
+                }
+            }
+
+            document.getElementById('btn-buy-poster').addEventListener('click', () => {
+                const babyNameVal = document.getElementById('pdf-baby-name').value.trim();
+                const selectedOrientation = document.querySelector('input[name="pdf-orientation"]:checked').value;
+                const selectedTheme = document.querySelector('input[name="pdf-theme"]:checked').value;
+                
+                // Cache user choices locally so they are preserved through the checkout redirect loop
+                const checkoutJobPayload = {
+                    name: babyNameVal,
+                    orientation: selectedOrientation,
+                    theme: selectedTheme
+                };
+                localStorage.setItem('checkout_pending_poster', JSON.stringify(checkoutJobPayload));
+                
+                // PLACE YOUR ACTUAL LEMON SQUEEZY OVERLAY CHECKOUT LINK HERE:
+                window.location.href = "https://kiddosspace.lemonsqueezy.com/checkout/..."; 
+            });
+
+            // ... Keep all modal close/open and storage sync handlers intact ...
+        });
 
         function setupLiveSearch() {
             const searchBar = document.getElementById('search-bar');
