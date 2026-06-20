@@ -1433,9 +1433,13 @@
 
             // SINGLE poster button: direct in-browser PDF download (no Lemon Squeezy, no fake payment)
             // ===== Lemon Squeezy overlay checkout =====
-            // Step one: create the product in Lemon Squeezy, copy its checkout/buy URL, paste it below.
-            // Step two: leave empty to stay in FREE TEST MODE — clicking just downloads the PDF, no payment.
-            const LEMONSQUEEZY_CHECKOUT_URL = ''; // e.g. 'https://myfirst100foods.lemonsqueezy.com/buy/xxxxxxxx'
+            // Per-design Lemon Squeezy checkout URLs. Any theme left '' stays in FREE TEST MODE (downloads, no payment).
+            const LS_CHECKOUT_URLS = {
+                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e',
+                pink: '',
+                sage: '',
+                blue: ''
+            };
             let pendingOrder = null;
 
             // Generate the personalized tracker PDF from a saved order
@@ -1471,8 +1475,9 @@
                     theme: document.querySelector('input[name="pdf-theme"]:checked').value
                 };
 
-                // FREE TEST MODE — no checkout URL configured yet → just download
-                if (!LEMONSQUEEZY_CHECKOUT_URL) {
+                // FREE TEST MODE for any design without a checkout URL yet → just download
+                const checkoutUrl = LS_CHECKOUT_URLS[order.theme] || '';
+                if (!checkoutUrl) {
                     deliverTracker(order);
                     closeModal(modalPremium);
                     return;
@@ -1480,7 +1485,7 @@
 
                 // PAID — open the Lemon Squeezy payment overlay; PDF is delivered on Checkout.Success
                 pendingOrder = order;
-                const url = LEMONSQUEEZY_CHECKOUT_URL + (LEMONSQUEEZY_CHECKOUT_URL.includes('?') ? '&' : '?') + 'embed=1';
+                const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1';
                 if (window.LemonSqueezy && window.LemonSqueezy.Url) {
                     window.LemonSqueezy.Url.Open(url);
                 } else {
