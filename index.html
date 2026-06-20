@@ -381,7 +381,16 @@
                         <span class="text-lg">✨</span> Create your customized tracker
                     </button>
                 </div>
-                <p class="reveal text-[11px] text-white/40 mt-8" style="--reveal-delay:540ms">© 2026 My First 100 Foods · Saved safely on your device.</p>
+                <nav class="reveal mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-white/60" style="--reveal-delay:520ms">
+                    <a href="/terms.html" class="hover:text-white underline-offset-2 hover:underline transition">Terms of Use</a>
+                    <span class="text-white/20">·</span>
+                    <a href="/privacy.html" class="hover:text-white underline-offset-2 hover:underline transition">Privacy Policy</a>
+                    <span class="text-white/20">·</span>
+                    <a href="/refund.html" class="hover:text-white underline-offset-2 hover:underline transition">Refund Policy</a>
+                    <span class="text-white/20">·</span>
+                    <a href="#" id="footer-faq" class="hover:text-white underline-offset-2 hover:underline transition">Help &amp; FAQ</a>
+                </nav>
+                <p class="reveal text-[11px] text-white/40 mt-3" style="--reveal-delay:560ms">© 2026 My First 100 Foods · Saved safely on your device.</p>
             </div>
         </section>
     </main>
@@ -1379,6 +1388,8 @@
             const openFaq = () => { track('faq_opened'); faqOverlay.classList.remove('hidden'); setTimeout(() => faqOverlay.classList.remove('opacity-0'), 10); };
             const closeFaq = () => { faqOverlay.classList.add('opacity-0'); setTimeout(() => faqOverlay.classList.add('hidden'), 300); };
             document.getElementById('btn-open-faq').addEventListener('click', openFaq);
+            const footerFaq = document.getElementById('footer-faq');
+            if (footerFaq) footerFaq.addEventListener('click', (e) => { e.preventDefault(); openFaq(); });
             document.getElementById('btn-close-faq').addEventListener('click', closeFaq);
 
             // Contact form → emails support@ via FormSubmit (hashed endpoint keeps the address out of the page source).
