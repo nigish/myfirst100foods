@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="berry" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2647A"/>
+      <stop offset="1" stop-color="#D8344E"/>
+    </linearGradient>
+  </defs>
+  <!-- strawberry body -->
+  <path d="M14 27 C14 19 22 16 32 16 C42 16 50 19 50 27 C50 41 39 53 32 57 C25 53 14 41 14 27 Z" fill="url(#berry)"/>
+  <!-- seeds -->
+  <g fill="#FFE6A3">
+    <ellipse cx="25" cy="29" rx="1.5" ry="2.3"/>
+    <ellipse cx="32" cy="27" rx="1.5" ry="2.3"/>
+    <ellipse cx="39" cy="29" rx="1.5" ry="2.3"/>
+    <ellipse cx="28" cy="37" rx="1.5" ry="2.3"/>
+    <ellipse cx="36" cy="37" rx="1.5" ry="2.3"/>
+    <ellipse cx="32" cy="45" rx="1.5" ry="2.3"/>
+  </g>
+  <!-- green leafy top -->
+  <path d="M18 19 Q24 12 32 17 Q40 12 46 19 Q39 24 32 20 Q25 24 18 19 Z" fill="#6FAE7C"/>
+  <!-- ribbon bow -->
+  <g>
+    <path d="M32 11 L25 6 L25 15 Z" fill="#E29578"/>
+    <path d="M32 11 L39 6 L39 15 Z" fill="#E29578"/>
+    <circle cx="32" cy="11" r="2.4" fill="#C66E50"/>
+  </g>
+</svg>
