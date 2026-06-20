@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiddos Space</title>
-    
-    <meta name="description" content="Track your baby's weaning milestones with this customizable tracker. Custom build and download your first 100 solid foods print poster checklist.">
+    <title>My First 100 Foods — Track Your Baby's First Tastes</title>
+
+    <meta name="description" content="An immersive scrollytelling weaning tracker. Journey through your baby's first 100 foods, chapter by chapter, and create a personalized printable tracker.">
     <meta name="keywords" content="baby led weaning, first 100 foods tracker, blw checklist, starting solids, 100 foods before 1, infant solid foods, baby food chart printable">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="templates.js"></script>
@@ -22,45 +22,131 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif'],
+                        serif: ['Fraunces', 'Georgia', 'serif'],
                     },
                     colors: {
-                        cream: '#FAF9F6',
+                        cream: '#FAF6EF',
                         clay: '#E29578',
+                        'clay-deep': '#C66E50',
                         sage: '#83C5BE',
                         'sage-light': '#EDF6F9',
                         oat: '#FFDDD2',
-                        charcoal: '#2B2D42',
+                        charcoal: '#23202B',
+                        ink: '#1A1820',
                     }
                 }
             }
         }
     </script>
     <style>
+        :root {
+            --c-bg: #FAF6EF;
+            --c-clay: #E29578;
+            --c-sage: #83C5BE;
+            --c-ink: #1A1820;
+        }
+        html { scroll-behavior: smooth; }
         body {
-            background-color: #FAF9F6;
-            color: #2B2D42;
+            background-color: var(--c-bg);
+            color: var(--c-ink);
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            overflow-x: hidden;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        /* === The scroll-snap stage === */
+        #stage {
+            height: 100vh;
+            height: 100dvh;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #FAF9F6;
+        #stage::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+        .chapter {
+            min-height: 100vh;
+            min-height: 100dvh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #E2957840;
-            border-radius: 10px;
+        /* When search is active we drop snapping for a free-scroll results view */
+        #stage.search-mode {
+            scroll-snap-type: none;
         }
-        .food-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* === Scroll reveal === */
+        .reveal {
+            opacity: 0;
+            transform: translateY(34px);
+            transition: opacity 0.9s cubic-bezier(.16,.84,.44,1), transform 0.9s cubic-bezier(.16,.84,.44,1);
+            transition-delay: var(--reveal-delay, 0ms);
         }
+        .chapter.in-view .reveal { opacity: 1; transform: translateY(0); }
+
+        /* Parallax-ish backdrop numeral */
+        .ghost-numeral {
+            position: absolute;
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            line-height: 0.8;
+            letter-spacing: -0.04em;
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.06;
+            transform: translateY(40px) scale(1.02);
+            transition: transform 1.2s cubic-bezier(.16,.84,.44,1), opacity 1.2s ease;
+        }
+        .chapter.in-view .ghost-numeral { transform: translateY(0) scale(1); opacity: 0.08; }
+
+        /* Floating produce blobs for depth */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(8px);
+            opacity: 0.5;
+            pointer-events: none;
+            transform: scale(0.6);
+            transition: transform 1.4s cubic-bezier(.16,.84,.44,1), opacity 1.4s ease;
+        }
+        .chapter.in-view .blob { transform: scale(1); opacity: 0.5; }
+
+        /* Food pill animation */
+        .food-card-wrapper {
+            transition: opacity .35s ease, transform .35s ease;
+        }
+        .food-pill { transition: all .22s cubic-bezier(.34,1.56,.64,1); }
+        .food-pill:active { transform: scale(.96); }
+
+        /* === Dot nav === */
+        .dot-nav-item .dot {
+            transition: all .35s cubic-bezier(.34,1.56,.64,1);
+        }
+        .dot-nav-item.active .dot {
+            transform: scale(1.0);
+            background: var(--c-clay);
+            width: 26px;
+            border-radius: 6px;
+        }
+        .dot-nav-item .dot-label {
+            opacity: 0;
+            transform: translateX(8px);
+            transition: all .3s ease;
+            pointer-events: none;
+        }
+        .dot-nav-item:hover .dot-label { opacity: 1; transform: translateX(0); }
+
+        /* Confetti */
         @keyframes confetti-fall {
-            0% { transform: translateY(-10vh) rotate(0deg);
-            opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg);
-            opacity: 0; }
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
         }
         .confetti {
             position: absolute;
@@ -68,188 +154,272 @@
             height: 16px;
             animation: confetti-fall 4s linear infinite;
         }
-        .faq-accordion[open] .faq-icon {
-            transform: rotate(180deg);
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2957855; border-radius: 10px; }
+
+        @keyframes float-soft {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-soft { animation: float-soft 6s ease-in-out infinite; }
+
+        .scroll-cue { animation: cue-bob 2.2s ease-in-out infinite; }
+        @keyframes cue-bob { 0%,100%{transform:translateY(0);opacity:.6;} 50%{transform:translateY(7px);opacity:1;} }
+
+        /* Tick feedback — applied ONLY to the single food just checked */
+        @keyframes tick-pop {
+            0%   { transform: scale(1); }
+            38%  { transform: scale(1.14); }
+            100% { transform: scale(1); }
+        }
+        .food-pill.just-ticked { animation: tick-pop .42s cubic-bezier(.34, 1.56, .64, 1); }
+        @keyframes check-burst {
+            0%   { transform: scale(.4); opacity: 1; }
+            70%  { opacity: .35; }
+            100% { transform: scale(2.1); opacity: 0; }
+        }
+        .food-pill.just-ticked .tick-circle::after {
+            content: ""; position: absolute; inset: -3px; border-radius: 9999px;
+            border: 2px solid #83C5BE; animation: check-burst .55s ease-out forwards;
+        }
+
+        /* ---- Live keepsake preview — mirrors the PDF layout (title, per-category 3-col grid, box to the RIGHT) ---- */
+        .poster-preview { container-type: size; position: relative; width: 100%; aspect-ratio: 1 / 1.414; background-color: #FFF8F2; background-size: cover; background-position: center; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 18px rgba(43,45,66,.16); }
+        .poster-preview .pp-inner { position: absolute; inset: 11% 8.5% 6%; display: flex; flex-direction: column; overflow: hidden; }
+        .poster-preview .pp-title { text-align: center; font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 600; line-height: 1.05; color: #2B2D42; margin-bottom: 1.6cqh; font-size: 5px; font-size: 3cqh; }
+        .poster-preview .pp-cat { display: inline-block; align-self: flex-start; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #C66E50; border-bottom: 1px solid currentColor; margin: 1cqh 0 0.5cqh; padding-bottom: 0.2cqh; font-size: 3px; font-size: 1.8cqh; }
+        .poster-preview .pp-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 5%; }
+        .poster-preview .pp-food { display: flex; align-items: center; gap: 0.4em; color: #2B2D42; white-space: nowrap; overflow: hidden; line-height: 1.28; font-size: 2px; font-size: 1.25cqh; }
+        .poster-preview .pp-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
+        .poster-preview .pp-box { flex: 0 0 auto; width: 0.95em; height: 0.95em; border: 1px solid rgba(43,45,66,.28); border-radius: 1px; }
+
+        /* ---- Banner: three themed mini trackers fanned like a hand of cards ---- */
+        .banner-fan { position: relative; width: 60px; height: 50px; }
+        .banner-fan-card { position: absolute; bottom: 0; left: 50%; width: 32px; transform-origin: bottom center; transition: transform .35s cubic-bezier(.34,1.4,.5,1); }
+        .banner-fan-card .poster-preview { border-radius: 3px; box-shadow: 0 2px 7px rgba(43,45,66,.32); outline: 1px solid rgba(255,255,255,.8); }
+        .banner-fan-card:nth-child(1) { transform: translateX(-50%) rotate(-16deg); z-index: 3; }
+        .banner-fan-card:nth-child(2) { transform: translateX(-50%) rotate(0deg);   z-index: 2; }
+        .banner-fan-card:nth-child(3) { transform: translateX(-50%) rotate(16deg);  z-index: 1; }
+        #promo-banner:hover .banner-fan-card:nth-child(1) { transform: translateX(-72%) rotate(-24deg); }
+        #promo-banner:hover .banner-fan-card:nth-child(3) { transform: translateX(-28%) rotate(24deg); }
+        @media (min-width: 640px) {
+            .banner-fan { width: 70px; height: 56px; }
+            .banner-fan-card { width: 37px; }
+        }
+
+        /* ---- Elegant keepsake CTA: soft breathing glow + slow sheen ---- */
+        @keyframes keepsake-glow {
+            0%, 100% { box-shadow: 0 6px 18px -4px rgba(226,149,120,.55), 0 0 0 0 rgba(226,149,120,0); }
+            50%      { box-shadow: 0 8px 26px -2px rgba(226,149,120,.75), 0 0 22px 2px rgba(226,149,120,.35); }
+        }
+        .keepsake-cta-glow { position: relative; overflow: hidden; animation: keepsake-glow 2.8s ease-in-out infinite; }
+        .keepsake-cta-glow::after {
+            content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+            transform: skewX(-18deg); animation: keepsake-sheen 4.6s ease-in-out infinite;
+        }
+        @keyframes keepsake-sheen { 0%, 62% { left: -60%; } 80%, 100% { left: 130%; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            #stage { scroll-snap-type: none; }
+            .reveal, .ghost-numeral, .blob { transition: none; opacity: 1; transform: none; }
+            .float-soft, .scroll-cue { animation: none; }
+            .food-pill.just-ticked { animation: none; }
+            .food-pill.just-ticked .tick-circle::after { animation: none; content: none; }
+            .keepsake-cta-glow { animation: none; }
+            .keepsake-cta-glow::after { display: none; }
         }
     </style>
 </head>
 <body class="font-sans antialiased selection:bg-oat">
 
-    <header class="sticky top-0 z-30 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-gray-100 transition-all">
-        <div class="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                
-                <div>
-                    <h1 class="font-serif text-2xl sm:text-3xl font-medium tracking-tight text-charcoal">First 100 Foods</h1>
-                    <p class="text-xs sm:text-sm text-gray-500 font-light mt-0.5">Celebrate every single milestone bite your little foodie takes!</p>
-                </div>
+    <!-- ============ FIXED PROGRESS HUD ============ -->
+    <!-- Top thin progress bar -->
+    <div class="fixed top-0 left-0 right-0 z-40 h-1.5 bg-charcoal/5">
+        <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-sage via-clay to-clay-deep transition-all duration-700 ease-out" style="width:0%"></div>
+    </div>
 
-                <div class="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-3 sm:p-4 shadow-sm flex-1 md:max-w-md">
-                    <div class="relative flex items-center justify-center flex-shrink-0 w-16 h-16 rounded-full bg-sage-light">
-                        <div class="text-center">
-                            <span id="global-count" class="block text-base sm:text-lg font-semibold text-charcoal leading-none">0</span>
-                            <span class="text-[9px] uppercase tracking-wider text-gray-400 font-medium" id="global-total-label">/ 100</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-1">
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Progress</span>
-                            <span id="global-percentage" class="text-xs font-semibold text-clay">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div id="global-progress-bar" class="bg-gradient-to-r from-sage to-clay h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 self-end md:self-center">
-                    <button id="btn-quick-reset" class="flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium rounded-xl transition shadow-sm" title="Reset Data">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                        <span>Reset List</span>
-                    </button>
-
-                    <button id="btn-open-settings" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition" title="Open Settings Dashboard">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </button>
+    <!-- Floating overall count badge (top-left) -->
+    <div class="fixed top-5 left-4 sm:left-6 z-40">
+        <div class="flex items-center gap-3 bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg shadow-charcoal/5 rounded-full pl-2 pr-4 py-2">
+            <div class="relative w-11 h-11 flex-shrink-0">
+                <svg viewBox="0 0 44 44" class="w-11 h-11 -rotate-90">
+                    <circle cx="22" cy="22" r="19" fill="none" stroke="#23202B12" stroke-width="4"></circle>
+                    <circle id="hud-ring" cx="22" cy="22" r="19" fill="none" stroke="#E29578" stroke-width="4"
+                        stroke-linecap="round" stroke-dasharray="119.38" stroke-dashoffset="119.38"
+                        class="transition-all duration-700 ease-out"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="hud-count" class="text-sm font-bold text-charcoal leading-none">0</span>
                 </div>
             </div>
-
-            <div class="mt-4 max-w-xl">
-                <div class="relative rounded-2xl shadow-sm">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
-                        </svg>
-                    </div>
-                    <input type="text" id="search-bar" placeholder="Search a food instantly (e.g. Avocado, Oats, Salmon)..."
-                        class="w-full bg-white border border-gray-200/80 rounded-2xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage placeholder:text-gray-400 transition" />
+            <div class="leading-tight">
+                <div class="flex items-baseline gap-1">
+                    <span id="hud-percent" class="text-sm font-bold text-clay-deep">0%</span>
+                    <span class="text-[10px] text-gray-400 font-medium">explored</span>
                 </div>
+                <div class="text-[10px] uppercase tracking-[0.14em] text-gray-400 font-semibold">of <span id="hud-total">100</span> foods</div>
             </div>
-
-            <div id="category-stats" class="flex gap-3 overflow-x-auto pt-4 pb-1 mt-2 custom-scrollbar snap-x scroll-smooth"></div>
-        </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 pb-16">
-        <div class="flex border-b border-gray-200 mb-8 overflow-x-auto custom-scrollbar sticky top-[210px] md:top-[168px] bg-[#FAF9F6] z-20 py-2">
-            <nav id="category-tabs" class="-mb-px flex space-x-6 min-w-max"></nav>
-        </div>
-        <div id="foods-master-container" class="space-y-12"></div>
-    </main>
-
-    <section class="max-w-4xl mx-auto px-4 py-12 border-t border-gray-100">
-        <div class="text-center mb-10">
-            <h3 class="font-serif text-2xl text-charcoal font-medium">Frequently Asked Questions</h3>
-        </div>
-        
-        <div class="space-y-3">
-            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
-                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
-                    <span>What is the difference between Baby-Led Weaning (BLW) and spoon-feeding?</span>
-                    <span class="faq-icon text-gray-400 transition-transform duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                    </span>
-                </summary>
-                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
-                    BLW encourages babies to self-feed soft, finger-sized strips of food from the start, focusing on motor skill development and self-regulation.
-                    Traditional weaning typically starts with purees, though many parents successfully use a hybrid approach that incorporates both textures.
-                </p>
-            </details>
-
-            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
-                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
-                    <span>When is it recommended to start introducing solid foods?</span>
-                    <span class="faq-icon text-gray-400 transition-transform duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                    </span>
-                </summary>
-                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
-                    Most major health organizations recommend beginning solid food introduction around 6 months of age, when your baby shows clear developmental signs of readiness.
-                    These signs include holding their head up independently, sitting securely with minimal support, showing curiosity toward your food, and losing the tongue-thrust reflex that pushes objects out of their mouth.
-                </p>
-            </details>
-
-            <details name="faq-group" class="faq-accordion group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm transition-all cursor-pointer">
-                <summary class="flex justify-between items-center list-none font-medium text-sm text-charcoal select-none">
-                    <span>How is my tracking progress saved? Will it disappear when I close the app?</span>
-                    <span class="faq-icon text-gray-400 transition-transform duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                    </span>
-                </summary>
-                <p class="text-xs text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50/80 pt-2.5">
-                    Your weaning checklist data logs are automatically saved directly onto your device using secure browser technology called local storage.
-                    This means you can freely close your tabs, shut down your web browser, or completely restart your mobile phone without losing any checked foods or milestone markers.
-                    When you return to the website, your list will restore exactly where you left it.
-                </p>
-            </details>
-        </div>
-    </section>
-
-    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] backdrop-blur-md">
-        <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-            <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-oat rounded-xl text-clay hidden sm:block animate-pulse">✨</div>
-                <div>
-                    <h4 class="text-sm font-semibold text-charcoal tracking-tight">Turn baby's weaning milestones into a kitchen print! 🥑</h4>
-                    <p class="text-xs text-gray-500">Transform your personalized list into a gorgeous fridge poster.</p>
-                </div>
-            </div>
-            <button id="btn-open-monetization" class="w-full sm:w-auto px-6 py-3 bg-clay hover:bg-clay/90 text-white font-medium text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-[0.98] tracking-wide whitespace-nowrap">
-                Create Your Custom Poster Layout
-            </button>
         </div>
     </div>
 
-    <div id="modal-celebration" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-500 overflow-hidden">
+    <!-- Floating action buttons (top-right) -->
+    <div class="fixed top-5 right-4 sm:right-6 z-40 flex items-center gap-2">
+        <button id="btn-open-search" title="Search foods" class="w-11 h-11 flex items-center justify-center bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg shadow-charcoal/5 rounded-full text-charcoal hover:text-clay hover:scale-105 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" /></svg>
+        </button>
+        <button id="btn-open-faq" title="Help & FAQs" class="w-11 h-11 flex items-center justify-center bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg shadow-charcoal/5 rounded-full text-charcoal hover:text-clay hover:scale-105 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 17.25h.007v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </button>
+        <button id="btn-open-settings" title="Settings & memory code" class="w-11 h-11 flex items-center justify-center bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg shadow-charcoal/5 rounded-full text-charcoal hover:text-clay hover:scale-105 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </button>
+        <button id="btn-open-poster" title="Create your customized tracker" class="keepsake-cta-glow h-11 pl-2.5 pr-4 flex items-center gap-2 bg-gradient-to-br from-clay to-clay-deep text-white font-semibold text-xs rounded-full ring-1 ring-white/30 hover:scale-105 transition">
+            <span class="text-base leading-none">✨</span>
+            <span class="hidden sm:inline tracking-wide">Your tracker</span>
+        </button>
+    </div>
+
+    <!-- Side dot nav (scroll-spy / jump) -->
+    <nav id="dot-nav" class="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-end gap-3"></nav>
+
+    <!-- ============ PERSISTENT "WHAT WE SELL" BANNER (stays on every chapter/page) ============ -->
+    <div id="promo-banner" class="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
+        <div class="mx-2 sm:mx-3 my-2 sm:my-3 pointer-events-auto">
+            <div class="relative flex items-center gap-3 sm:gap-5 rounded-2xl pl-4 pr-2.5 sm:pl-5 sm:pr-4 py-2.5 sm:py-3.5 overflow-hidden bg-white/80 backdrop-blur-2xl border border-white/70 ring-1 ring-clay/10 shadow-[0_14px_44px_-14px_rgba(226,149,120,.55)]">
+                <span id="banner-keepsake-preview" class="banner-fan flex-shrink-0"></span>
+                <div class="min-w-0 flex-1 leading-tight">
+                    <p class="font-serif text-sm sm:text-base font-semibold text-charcoal truncate">Your Customized First 100 Foods Tracker</p>
+                    <p class="text-[11px] sm:text-xs text-charcoal/55 truncate">A personalized, print-ready memento of every first taste — ready to frame.</p>
+                </div>
+                <button id="btn-banner-poster" class="flex-shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-br from-clay to-clay-deep text-white text-xs sm:text-sm font-semibold px-4 sm:px-6 py-2.5 rounded-full shadow-lg shadow-clay/30 ring-1 ring-white/25 hover:scale-[1.03] transition whitespace-nowrap">
+                    Get your tracker <span aria-hidden="true">→</span>
+                </button>
+                <button id="btn-dismiss-banner" title="Dismiss" aria-label="Dismiss banner" class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-charcoal/35 hover:text-charcoal hover:bg-charcoal/5 transition text-lg leading-none">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SEARCH OVERLAY ============ -->
+    <div id="search-overlay" class="fixed inset-0 z-50 bg-cream/97 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 flex flex-col">
+        <div class="max-w-3xl w-full mx-auto px-5 pt-24 pb-6 flex-shrink-0">
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] uppercase tracking-[0.2em] text-clay font-bold">Find a food</span>
+                <button id="btn-close-search" class="text-gray-400 hover:text-charcoal transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1 text-clay">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" /></svg>
+                </div>
+                <input type="text" id="search-bar" autocomplete="off" placeholder="Avocado, Oats, Salmon…"
+                    class="w-full bg-transparent border-b-2 border-charcoal/15 focus:border-clay py-3 pl-9 pr-3 text-2xl sm:text-3xl font-serif text-charcoal focus:outline-none placeholder:text-gray-300 transition" />
+            </div>
+            <p id="search-meta" class="text-xs text-gray-400 font-medium mt-3">Start typing to filter all 100 foods. Tap any result to mark it tried.</p>
+        </div>
+        <div id="search-results" class="flex-1 overflow-y-auto custom-scrollbar max-w-3xl w-full mx-auto px-5 pb-16"></div>
+    </div>
+
+    <!-- ============ THE STAGE: snapping chapters ============ -->
+    <main id="stage">
+
+        <!-- HERO / INTRO chapter -->
+        <section class="chapter" data-chapter="hero">
+            <div class="ghost-numeral text-[42vw] sm:text-[34vw] -top-[6vh] -right-[4vw] text-clay">100</div>
+            <span class="blob w-72 h-72 bg-sage -bottom-20 -left-16"></span>
+            <span class="blob w-56 h-56 bg-oat top-24 right-10"></span>
+            <div class="relative z-10 max-w-3xl mx-auto px-6 text-center">
+                <p class="reveal text-[11px] sm:text-xs uppercase tracking-[0.35em] text-clay font-bold mb-5" style="--reveal-delay:60ms">My First 100 Foods</p>
+                <h1 class="reveal font-serif text-5xl sm:text-7xl md:text-8xl font-semibold tracking-[-0.03em] text-charcoal leading-[0.95]" style="--reveal-delay:140ms">
+                    First 100<br><span class="italic text-clay">Foods</span> Journey
+                </h1>
+                <p class="reveal text-base sm:text-lg text-gray-500 font-light mt-7 max-w-xl mx-auto leading-relaxed" style="--reveal-delay:260ms">
+                    Six chapters. One hundred first tastes. Scroll through your little one's weaning story and celebrate every milestone bite along the way.
+                </p>
+                <div class="reveal mt-9 flex flex-col sm:flex-row items-center justify-center gap-3" style="--reveal-delay:380ms">
+                    <button data-jump="first" class="px-7 py-3.5 bg-charcoal text-white font-semibold text-sm rounded-full shadow-xl shadow-charcoal/15 hover:bg-ink hover:scale-[1.03] transition">Begin the journey</button>
+                    <button id="btn-quick-reset" class="px-6 py-3.5 text-gray-500 hover:text-red-500 font-medium text-sm rounded-full hover:bg-red-50 transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                        Reset list
+                    </button>
+                </div>
+            </div>
+            <div class="scroll-cue absolute bottom-24 left-1/2 -translate-x-1/2 text-charcoal/40 flex flex-col items-center gap-1">
+                <span class="text-[10px] uppercase tracking-[0.2em] font-semibold">Scroll</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            </div>
+        </section>
+
+        <!-- CATEGORY CHAPTERS injected here -->
+        <div id="chapters-container" class="contents"></div>
+
+        <!-- OUTRO / KEEPSAKE chapter -->
+        <section class="chapter bg-charcoal text-white" data-chapter="outro">
+            <div class="ghost-numeral text-[40vw] sm:text-[30vw] -bottom-[10vh] -left-[3vw] text-white">★</div>
+            <span class="blob w-72 h-72 bg-clay -top-20 -right-10" style="opacity:.35"></span>
+            <span class="blob w-60 h-60 bg-sage bottom-10 left-8" style="opacity:.3"></span>
+            <div class="relative z-10 max-w-2xl mx-auto px-6 text-center">
+                <p class="reveal text-[11px] uppercase tracking-[0.35em] text-clay font-bold mb-5">Your tracker</p>
+                <h2 class="reveal font-serif text-4xl sm:text-6xl font-semibold tracking-[-0.02em] leading-[1.02]" style="--reveal-delay:120ms">
+                    Turn this journey<br>into a <span class="italic text-oat">printable tracker</span>
+                </h2>
+                <p class="reveal text-white/60 font-light mt-6 max-w-lg mx-auto leading-relaxed" style="--reveal-delay:240ms">
+                    Your personalized list becomes a beautiful printable tracker with your little one's name — a milestone worth framing.
+                </p>
+                <div id="outro-stat" class="reveal mt-8 inline-flex items-center gap-4 bg-white/8 border border-white/15 rounded-2xl px-6 py-4" style="--reveal-delay:340ms">
+                    <span class="font-serif text-4xl font-semibold text-oat" id="outro-count">0</span>
+                    <span class="text-left text-sm text-white/70 leading-snug">foods explored<br><span class="text-white/40 text-xs">on your tracker so far</span></span>
+                </div>
+                <div class="reveal mt-9" style="--reveal-delay:440ms">
+                    <button id="btn-open-poster-2" class="px-9 py-4 bg-clay hover:bg-clay-deep text-white font-semibold text-sm rounded-full shadow-xl shadow-clay/30 hover:scale-[1.03] transition inline-flex items-center gap-2">
+                        <span class="text-lg">✨</span> Create your customized tracker
+                    </button>
+                </div>
+                <p class="reveal text-[11px] text-white/40 mt-8" style="--reveal-delay:540ms">© 2026 My First 100 Foods · Saved safely on your device.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============ MODALS ============ -->
+    <!-- Celebration -->
+    <div id="modal-celebration" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-500 overflow-hidden">
         <div id="confetti-holder" class="absolute inset-0 pointer-events-none"></div>
-        
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative transform scale-90 transition-transform duration-500 text-center z-10">
             <div class="w-20 h-20 bg-oat text-clay rounded-full flex items-center justify-center mx-auto mb-4 text-3xl animate-bounce">🎉</div>
             <span class="inline-block px-3 py-1 bg-sage-light text-charcoal font-medium text-[10px] tracking-wider uppercase rounded-full mb-2">Milestone Reached!</span>
             <h3 id="celebration-title" class="font-serif text-3xl font-medium text-charcoal mb-2">25% Accomplished</h3>
-            <p id="celebration-subtitle" class="text-sm text-gray-500 mb-6 font-light leading-relaxed">Your little explorer is building an incredible palate! Keep exploring new textures and tastes together.</p>
-            
+            <p id="celebration-subtitle" class="text-sm text-gray-500 mb-6 font-light leading-relaxed">Your little explorer is building an incredible palate!</p>
             <div class="flex flex-col sm:flex-row gap-2">
-                <button id="btn-share-milestone" class="flex-1 bg-clay hover:bg-clay/90 text-white font-medium py-3 rounded-xl transition shadow-md tracking-wide text-sm flex items-center justify-center gap-2 transform active:scale-[0.98]">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 00 2.186m0-2.186l5.574-3.132m0 0a2.25 2.25 0 1 1 2.592 3.712m-2.592-3.712L7.217 13.093m0 0l5.574 3.132m0 0a2.25 2.25 0 1 0 2.592-3.712" />
-                    </svg>
+                <button id="btn-share-milestone" class="flex-1 bg-clay hover:bg-clay-deep text-white font-medium py-3 rounded-xl transition shadow-md tracking-wide text-sm flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186l5.574-3.132m0 0a2.25 2.25 0 112.592 3.712m-2.592-3.712L7.217 13.093m0 0l5.574 3.132m0 0a2.25 2.25 0 102.592-3.712" /></svg>
                     <span>Share Milestone</span>
                 </button>
-                <button class="flex-1 bg-charcoal hover:bg-charcoal/90 text-white font-medium py-3 rounded-xl transition shadow-md modal-close-btn tracking-wide text-sm">
-                    Continue Journey
-                </button>
+                <button class="flex-1 bg-charcoal hover:bg-ink text-white font-medium py-3 rounded-xl transition shadow-md modal-close-btn tracking-wide text-sm">Continue Journey</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-premium" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <!-- Premium / Poster -->
+    <div id="modal-premium" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            
             <div class="text-center mb-5">
-                <span class="inline-block px-3 py-1 bg-oat text-clay font-medium text-[10px] tracking-wider uppercase rounded-full mb-2">The Kiddos Space</span>
-                <h3 class="font-serif text-2xl font-medium text-charcoal">First 100 Foods Tracker</h3>
-                <p class="text-sm text-gray-500 mt-1">Get your customized poster with your little one's name.</p>
+                <span class="inline-block px-3 py-1 bg-oat text-clay font-medium text-[10px] tracking-wider uppercase rounded-full mb-2">My First 100 Foods</span>
+                <h3 class="font-serif text-2xl font-medium text-charcoal">Your Customized First 100 Foods Tracker</h3>
+                <p class="text-sm text-gray-500 mt-1">A personalized tracker with your little one's name — ready to print &amp; fill in.</p>
             </div>
-
             <div class="space-y-4 mb-6">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">1. Type your little one's name</label>
-                    <input type="text" id="pdf-baby-name" placeholder="e.g. Oliver, Sophia"
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition-all text-charcoal" />
+                    <input type="text" id="pdf-baby-name" placeholder="e.g. Oliver, Sophia" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition-all text-charcoal" />
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">2. Select Poster Color Theme</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">2. Choose your tracker design</label>
                     <div class="grid grid-cols-2 gap-2" id="theme-selector-container">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-theme" value="classic" checked class="accent-clay w-4 h-4" />
@@ -269,202 +439,248 @@
                         </label>
                     </div>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Select Layout </label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Select Layout</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-orientation" value="p" checked class="accent-clay w-4 h-4" />
-                            <div>
-                                <span class="block text-xs font-medium text-charcoal">Portrait Layout</span>
-                                <span class="text-[10px] text-gray-400">Vertical print (Standard A4)</span>
-                            </div>
+                            <div><span class="block text-xs font-medium text-charcoal">Portrait Layout</span><span class="text-[10px] text-gray-400">Vertical print (Standard A4)</span></div>
                         </label>
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-orientation" value="l" class="accent-clay w-4 h-4" />
-                            <div>
-                                <span class="block text-xs font-medium text-charcoal">Landscape Layout</span>
-                                <span class="text-[10px] text-gray-400">Horizontal print layout</span>
-                            </div>
+                            <div><span class="block text-xs font-medium text-charcoal">Landscape Layout</span><span class="text-[10px] text-gray-400">Horizontal print layout</span></div>
                         </label>
                     </div>
                 </div>
-
                 <div class="p-4 bg-cream rounded-2xl border border-gray-100 flex justify-between items-center">
-                    <span class="text-xs font-semibold text-charcoal uppercase tracking-wider">Total Keepsake Price</span>
+                    <span class="text-xs font-semibold text-charcoal uppercase tracking-wider">Tracker Price</span>
                     <span id="txt-active-price" class="text-sm font-bold text-charcoal">€3.99</span>
                 </div>
             </div>
-
             <div class="space-y-2">
-                <button id="btn-buy-poster" class="w-full bg-clay hover:bg-clay/90 text-white font-medium py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 tracking-wide text-sm font-semibold">
-                    <span>Unlock & Save Keepsake Poster 🥑</span>
+                <button id="btn-buy-poster" class="w-full bg-clay hover:bg-clay-deep text-white py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 tracking-wide text-sm font-semibold">
+                    <span>Get your tracker ✨</span>
                 </button>
                 <p class="text-[11px] text-center text-gray-400 font-light leading-relaxed mt-2">
-                    Your customized vector print document is completely processed in-app safely via Lemon Squeezy logic protocols.
+                    Your customized print-ready PDF is generated instantly, right here in your browser.
                 </p>
             </div>
         </div>
     </div>
 
-    <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <!-- Settings -->
+    <div id="modal-settings" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative transform scale-95 transition-transform duration-300">
             <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            
-            <h3 class="font-serif text-xl font-medium text-charcoal mb-4">Keep Settings Safe</h3>
-            
+            <h3 class="font-serif text-xl font-medium text-charcoal mb-4">Keep your progress safe</h3>
             <div class="space-y-4">
                 <div class="p-4 bg-sage-light rounded-2xl border border-sage/20">
                     <h4 class="text-sm font-medium text-charcoal mb-1">Share Between Devices</h4>
-                    <p class="text-xs text-gray-500 mb-3">Copy your unique memory code to move your baby's food checklist safely over to another phone, tablet, or partner's browser.</p>
+                    <p class="text-xs text-gray-500 mb-3">Copy your unique memory code to move your baby's checklist safely to another phone, tablet, or partner's browser.</p>
                     <div class="flex gap-2">
                         <button id="btn-export-data" class="flex-1 bg-white border border-gray-200 text-xs text-charcoal font-medium py-2 px-3 rounded-xl transition shadow-sm hover:bg-gray-50">Copy Memory Code</button>
                         <button id="btn-import-data" class="flex-1 bg-white border border-gray-200 text-xs text-charcoal font-medium py-2 px-3 rounded-xl transition shadow-sm hover:bg-gray-50">Load Saved Code</button>
                     </div>
                 </div>
+                <button id="btn-reset-settings" class="w-full bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                    Reset all progress
+                </button>
             </div>
         </div>
     </div>
 
-    <footer class="bg-white border-t border-gray-100 py-12">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <p class="text-xs font-semibold text-charcoal tracking-wide mb-5 bg-gray-50 border border-gray-100 inline-block px-4 py-1.5 rounded-full shadow-sm">
-                © 2026 The Kiddos Space Co. All rights reserved.
-            </p>
+    <!-- ============ KEEPSAKE NUDGE (after a few foods) ============ -->
+    <div id="modal-keepsake-nudge" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-charcoal/50 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl relative transform scale-95 transition-transform duration-300 max-h-[92vh] overflow-y-auto custom-scrollbar text-center">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <span class="inline-block px-3 py-1 bg-oat text-clay font-semibold text-[10px] tracking-wider uppercase rounded-full mb-3">Your tracker</span>
+            <h3 class="font-serif text-2xl sm:text-3xl font-medium text-charcoal mb-2">Look what you're creating</h3>
+            <p class="text-sm text-gray-500 font-light mb-5 leading-relaxed max-w-md mx-auto">Every food you tap brings you closer to a beautiful printable tracker — personalized with your little one's name, ready to print &amp; tick off. A few of the designs you can choose:</p>
+            <div id="keepsake-nudge-images" class="grid grid-cols-3 gap-3 mb-6"></div>
+            <button id="btn-nudge-buy" class="w-full bg-clay hover:bg-clay-deep text-white font-semibold py-3.5 rounded-xl transition shadow-md tracking-wide text-sm flex items-center justify-center gap-2">
+                <span class="text-lg">✨</span> Get your customized tracker
+            </button>
+            <button class="mt-3 text-xs text-gray-400 hover:text-charcoal transition modal-close-btn">Maybe later</button>
+        </div>
+    </div>
 
-            <h3 class="font-serif text-base text-gray-600 mb-3">Our Mission</h3>
-            <p class="text-xs text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-                We build intentional tools to support families managing early development milestones.
-                Our goal is to transform daily habit tracking routines into beautiful, stress-free keepsake moments.
-            </p>
-            
-            <p class="text-[10px] text-gray-400/80 max-w-2xl mx-auto leading-relaxed font-light mt-4 p-3 bg-cream rounded-xl border border-gray-100">
-                <strong>Medical Disclaimer:</strong> This app provides general educational information only and does not constitute professional medical advice, diagnosis, or treatment.
-                We are not responsible for any health complications or emergencies that may arise.
-                Always consult your pediatrician before introducing new foods or if you have concerns about your child's health.
-            </p>
-
-            <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-6 text-[10px] tracking-wide text-gray-400 font-medium uppercase">
-                <span>• Infant Weaning Milestones</span>
-                <span>• 100 Tastes Checklist Chart</span>
-                <span>• Solid Food Readiness Guide</span>
-                <span>• Allergic Exposure Log</span>
+    <!-- ============ FAQ OVERLAY ============ -->
+    <div id="faq-overlay" class="fixed inset-0 z-50 bg-cream/98 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 flex flex-col">
+        <div class="max-w-2xl w-full mx-auto px-5 pt-20 pb-4 flex-shrink-0">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <span class="text-[11px] uppercase tracking-[0.2em] text-clay font-bold">Help &amp; answers</span>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-semibold text-charcoal mt-1 leading-tight">Frequently asked questions</h2>
+                </div>
+                <button id="btn-close-faq" class="text-gray-400 hover:text-charcoal transition flex-shrink-0 mt-1" aria-label="Close FAQs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
             </div>
         </div>
-    </footer>
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="max-w-2xl w-full mx-auto px-5 pb-32 space-y-3">
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>When should I start introducing solid foods?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        Most pediatric guidelines suggest starting solids around <strong>6 months</strong>, once your baby shows signs of readiness: sitting upright with little support, steady head control, curiosity about your food, and no longer pushing food out with their tongue. Every baby is different — always check with your pediatrician before you begin, and when introducing common allergens.
+                    </div>
+                </details>
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>How does this tracker work?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        Tap any food to mark it as tried — it turns pastel green and your progress fills the bar at the top and within each category. Use the <strong>“+ Add custom”</strong> box to add your own foods, or remove ones you don't need. When you're ready, turn your personalized list into a printable tracker with your baby's name.
+                    </div>
+                </details>
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>Where are my ticked foods stored?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        Everything is saved privately on your own device, right inside your browser (using local storage). Nothing is uploaded to a server and no account is needed — your progress stays with you.
+                    </div>
+                </details>
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>How do I copy my list to another phone or device?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        Open <strong>Settings</strong> (the gear icon, top right) → <strong>“Copy Memory Code”</strong>. That copies a short code of your whole list to your clipboard. On the other device, open the site, go to Settings → <strong>“Load Saved Code”</strong>, and paste it in — your progress and custom foods restore instantly.
+                    </div>
+                </details>
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>In what cases could I lose my data?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        Because your list lives in this browser, it can be lost if you clear your browser history / cache or site data, use private / incognito mode, switch to a different browser or device, or uninstall the browser. To be safe, copy your <strong>Memory Code</strong> (see above) and keep it somewhere safe — that's your backup.
+                    </div>
+                </details>
+
+                <details name="faq" class="faq-item group bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer">
+                    <summary class="flex justify-between items-center list-none font-semibold text-sm text-charcoal select-none gap-3">
+                        <span>I had a problem with my payment — what should I do?</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </summary>
+                    <div class="text-xs sm:text-sm text-gray-500 font-light mt-3 leading-relaxed border-t border-gray-50 pt-3">
+                        If your payment didn't go through, or you were charged but didn't receive your tracker, email <a href="mailto:support@myfirst100foods.com" class="text-clay font-medium underline">support@myfirst100foods.com</a> with the email you used and the approximate time of purchase, and we'll sort it out quickly. Your tracker is also re-generated right after a successful payment, so you can simply try the download again.
+                    </div>
+                </details>
+
+                <form id="contact-form" class="mt-6 bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <h3 class="font-serif text-lg font-semibold text-charcoal">Still need help? Send us a message</h3>
+                    <p class="text-xs text-gray-500 mb-3">Write to us here and we'll reply straight to your inbox — no need to open your email app.</p>
+                    <div class="space-y-2.5">
+                        <!-- Honeypot: humans never see/fill this; bots do → submission is silently dropped -->
+                        <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+                            <label>Leave this field empty<input type="text" name="_honey" id="contact-hp" tabindex="-1" autocomplete="off" /></label>
+                        </div>
+                        <input type="email" id="contact-email" name="email" required maxlength="254" placeholder="Your email" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition text-charcoal" />
+                        <textarea id="contact-message" name="message" required rows="3" maxlength="2000" placeholder="How can we help?" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition text-charcoal resize-y"></textarea>
+                        <button type="submit" id="contact-submit" class="w-full bg-clay hover:bg-clay-deep text-white font-semibold text-sm py-3 rounded-xl shadow-md transition">Send message</button>
+                        <p id="contact-status" class="text-xs text-center hidden"></p>
+                    </div>
+                </form>
+
+                <p class="text-[11px] text-gray-400/90 leading-relaxed mt-4 p-4 bg-white/60 rounded-2xl border border-gray-100">
+                    <strong>Medical note:</strong> This site offers general educational information only and is not medical advice, diagnosis, or treatment. Always consult your pediatrician about your child's diet, allergies, and readiness for solids.
+                </p>
+            </div>
+        </div>
+    </div>
 
     <script>
         const NATIVE_DEFAULT_DATASET = [
-            {
-                id: "veg",
-                name: "Vegetables",
-                items: ["Avocado", "Sweet Potato", "Broccoli", "Carrot", "Butternut Squash", "Spinach", "Zucchini", "Peas", "Cauliflower", "Green Beans", "Pumpkin", "Beets", "Bell Peppers", "Mushroom", "Cucumber", "Celery", "Eggplant", "Onion", "Garlic", "Cabbage", "Parsnips", "Turnip", "Asparagus", "Potato", "Tomato"]
-            },
-            {
-                id: "fruit",
-                name: "Fruits",
-                items: ["Banana", "Apple", "Pear", "Peach", "Plum", "Mango", "Strawberry", "Blueberry", "Raspberry", "Blackberry", "Kiwi", "Papaya", "Watermelon", "Cantaloupe", "Honeydew", "Orange", "Lemon", "Pineapple", "Fig", "Grape", "Apricot", "Cherry", "Pomegranate", "Coconut", "Dates"]
-            },
-            {
-                id: "protein",
-                name: "Proteins",
-                items: ["Chicken", "Beef", "Turkey", "Lamb", "Pork", "Salmon", "Tuna", "Lentils", "Chickpeas", "Black Beans", "Kidney Beans", "White Beans", "Tofu", "Edamame", "Liver"]
-            },
-            {
-                id: "allergen",
-                name: "Allergens & Dairy",
-                items: ["Egg", "Peanut", "Yogurt", "Cheddar", "Mozzarella", "Ricotta", "Cottage Cheese", "Walnut", "Wheat Flour", "Sesame Seeds", "Shrimp", "Crab", "Almond", "Cashew", "Soy"]
-            },
-            {
-                id: "grain",
-                name: "Grains & Starches",
-                items: ["Oats", "Brown Rice", "Quinoa", "Couscous", "Bulgur", "Millet", "Whole Wheat", "Buckwheat", "Sweetcorn", "White Rice"]
-            },
-            {
-                id: "herb",
-                name: "Herbs & Spices",
-                items: ["Ginger", "Rosemary", "Basil", "Mint", "Cinnamon", "Parsley", "Thyme", "Cumin", "Dill", "Paprika"]
-            }
+            { id: "veg", name: "Vegetables", items: ["Avocado", "Sweet Potato", "Broccoli", "Carrot", "Butternut Squash", "Spinach", "Zucchini", "Peas", "Cauliflower", "Green Beans", "Pumpkin", "Beets", "Bell Peppers", "Mushroom", "Cucumber", "Celery", "Eggplant", "Onion", "Garlic", "Cabbage", "Parsnips", "Turnip", "Asparagus", "Potato", "Tomato"] },
+            { id: "fruit", name: "Fruits", items: ["Banana", "Apple", "Pear", "Peach", "Plum", "Mango", "Strawberry", "Blueberry", "Raspberry", "Blackberry", "Kiwi", "Papaya", "Watermelon", "Cantaloupe", "Honeydew", "Orange", "Lemon", "Pineapple", "Fig", "Grape", "Apricot", "Cherry", "Pomegranate", "Coconut", "Dates"] },
+            { id: "protein", name: "Proteins", items: ["Chicken", "Beef", "Turkey", "Lamb", "Pork", "Salmon", "Tuna", "Lentils", "Chickpeas", "Black Beans", "Kidney Beans", "White Beans", "Tofu", "Edamame", "Liver"] },
+            { id: "allergen", name: "Allergens & Dairy", items: ["Egg", "Peanut", "Yogurt", "Cheddar", "Mozzarella", "Ricotta", "Cottage Cheese", "Walnut", "Wheat Flour", "Sesame Seeds", "Shrimp", "Crab", "Almond", "Cashew", "Soy"] },
+            { id: "grain", name: "Grains & Starches", items: ["Oats", "Brown Rice", "Quinoa", "Couscous", "Bulgur", "Millet", "Whole Wheat", "Buckwheat", "Sweetcorn", "White Rice"] },
+            { id: "herb", name: "Herbs & Spices", items: ["Ginger", "Rosemary", "Basil", "Mint", "Cinnamon", "Parsley", "Thyme", "Cumin", "Dill", "Paprika"] }
         ];
-        const STORAGE_KEY = "babys_first_100_foods_custom_v16";
-        let state = {
-            dataset: [],
-            tried: [],
-            triggeredMilestones: []
+
+        // Per-chapter scene-setting copy + emoji accents
+        const CHAPTER_META = {
+            veg:      { emoji: "🥦", tone: "#83C5BE", intro: "Earthy, sweet, and usually where the whole adventure starts." },
+            fruit:    { emoji: "🍓", tone: "#E29578", intro: "Naturally sweet, brightly colored, and almost always a hit." },
+            protein:  { emoji: "🍗", tone: "#C66E50", intro: "Tender, iron-rich little bites that help them grow." },
+            allergen: { emoji: "🥚", tone: "#9D8DF1", intro: "Best offered early and often — just a little at a time." },
+            grain:    { emoji: "🌾", tone: "#D9A441", intro: "Warm, hearty staples that fill up happy little tummies." },
+            herb:     { emoji: "🌿", tone: "#6FAE7C", intro: "Gentle pinches of flavor to wake up new tastebuds." }
         };
 
+        const STORAGE_KEY = "babys_first_100_foods_custom_v16";
+        let state = { dataset: [], tried: [], triggeredMilestones: [] };
+
+        // ---------- Storage ----------
         function initStorage() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try {
                     state = JSON.parse(stored);
-                    if(!state.dataset || state.dataset.length === 0) {
+                    if (!state.dataset || state.dataset.length === 0) {
                         state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
                     }
-                    if(!state.triggeredMilestones) state.triggeredMilestones = [];
-                } catch (e) {
-                    resetToSystemDefault();
-                }
-            } else {
-                resetToSystemDefault();
-            }
+                    if (!state.triggeredMilestones) state.triggeredMilestones = [];
+                } catch (e) { resetToSystemDefault(); }
+            } else { resetToSystemDefault(); }
         }
-
         function resetToSystemDefault() {
             state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
             state.tried = [];
             state.triggeredMilestones = [];
             saveStorage();
         }
-
-        function saveStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
-
-        function calculateStats() {
-            let totalItems = 0;
-            let triedCount = 0;
-            const categoryBreakdown = {};
-
-            state.dataset.forEach(category => {
-                const totalInCat = category.items.length;
-                let triedInCat = 0;
-                category.items.forEach(item => {
-                    const uniqueId = generateSlug(category.id, item);
-                    if (state.tried.includes(uniqueId)) {
-                        triedInCat++;
-                        triedCount++;
-                    }
-                });
-
-                totalItems += totalInCat;
-                categoryBreakdown[category.id] = {
-                    total: totalInCat,
-                    tried: triedInCat
-                };
-            });
-
-            const percentage = totalItems > 0 ? Math.floor((triedCount / totalItems) * 100) : 0;
-            return { totalItems, triedCount, percentage, categoryBreakdown };
-        }
+        function saveStorage() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
         function generateSlug(catId, itemName) {
             return `${catId}-${itemName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
         }
 
+        function calculateStats() {
+            let totalItems = 0, triedCount = 0;
+            const categoryBreakdown = {};
+            state.dataset.forEach(category => {
+                const totalInCat = category.items.length;
+                let triedInCat = 0;
+                category.items.forEach(item => {
+                    if (state.tried.includes(generateSlug(category.id, item))) { triedInCat++; triedCount++; }
+                });
+                totalItems += totalInCat;
+                categoryBreakdown[category.id] = { total: totalInCat, tried: triedInCat };
+            });
+            const percentage = totalItems > 0 ? Math.floor((triedCount / totalItems) * 100) : 0;
+            return { totalItems, triedCount, percentage, categoryBreakdown };
+        }
+
+        // ---------- Milestones ----------
         function evaluateMilestoneTriggers(currentPercentage) {
             const targets = [25, 50, 75, 100];
             for (let i = targets.length - 1; i >= 0; i--) {
                 const target = targets[i];
-                if (currentPercentage >= target) {
-                    if (!state.triggeredMilestones.includes(target.toString())) {
-                        state.triggeredMilestones.push(target.toString());
-                        saveStorage();
-                        triggerCelebrationModal(target);
-                        break; 
-                    }
+                if (currentPercentage >= target && !state.triggeredMilestones.includes(target.toString())) {
+                    state.triggeredMilestones.push(target.toString());
+                    saveStorage();
+                    triggerCelebrationModal(target);
+                    break;
                 }
             }
         }
@@ -475,7 +691,7 @@
             const subtitle = document.getElementById('celebration-subtitle');
             const holder = document.getElementById('confetti-holder');
             const shareBtn = document.getElementById('btn-share-milestone');
-            
+
             title.textContent = `${milestone}% Accomplished!`;
             const subtexts = {
                 25: "Your little explorer is building an incredible palate! One quarter of the way through a lifetime of new textures and tastes.",
@@ -484,30 +700,25 @@
                 100: "Incredible! You made it to the finish line. You've given your baby such an amazing, healthy foundation for a lifetime of eating!"
             };
             subtitle.textContent = subtexts[milestone] || subtexts[25];
-            
+
             shareBtn.onclick = () => {
                 const babyName = document.getElementById('pdf-baby-name').value.trim();
                 const shareSubject = babyName ? `${babyName}'s Weaning Milestone!` : "Weaning Progress Milestone!";
-                const shareText = babyName 
-                    ? `🥑 Big milestone! ${babyName} has officially discovered and tried ${milestone}% of their First 100 Foods milestone checklist!\nTracking our culinary journey at kiddosspace.com ✨`
-                    : `🥑 Big milestone!\nWe have officially discovered and tried ${milestone}% of our First 100 Foods milestone checklist!\nTracking our culinary journey at kiddosspace.com ✨`;
-
+                const shareText = babyName
+                    ? `🥑 Big milestone! ${babyName} has officially discovered and tried ${milestone}% of their First 100 Foods milestone checklist!\nTracking our culinary journey at myfirst100foods.com ✨`
+                    : `🥑 Big milestone!\nWe have officially discovered and tried ${milestone}% of our First 100 Foods milestone checklist!\nTracking our culinary journey at myfirst100foods.com ✨`;
                 if (navigator.share) {
-                    navigator.share({
-                        title: shareSubject,
-                        text: shareText,
-                        url: 'https://kiddosspace.com'
-                    }).catch((err) => console.log("Sharing error profile logged: ", err));
+                    navigator.share({ title: shareSubject, text: shareText, url: 'https://myfirst100foods.com' }).catch((err) => console.log("Sharing error logged: ", err));
                 } else {
                     navigator.clipboard.writeText(shareText).then(() => {
                         alert("✨ Share asset copied to clipboard! Paste it into your Instagram Story, WhatsApp Status, or family group chat to celebrate.");
                     });
                 }
             };
-            
+
             holder.innerHTML = '';
-            const colors = ['#83C5BE', '#E29578', '#FFDDD2', '#2B2D42'];
-            for(let i=0; i<75; i++) {
+            const colors = ['#83C5BE', '#E29578', '#FFDDD2', '#23202B'];
+            for (let i = 0; i < 75; i++) {
                 const div = document.createElement('div');
                 div.className = 'confetti';
                 div.style.left = Math.random() * 100 + 'vw';
@@ -517,7 +728,6 @@
                 div.style.animationDuration = (Math.random() * 2 + 3) + 's';
                 holder.appendChild(div);
             }
-
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
@@ -525,47 +735,20 @@
             }, 10);
         }
 
-        /* --- STABLE CONTRAST OPTIMIZED PRINT PATTERN SYSTEM --- */
+        // ---------- PDF poster export (unchanged logic) ----------
         function exportSinglePagePDF(babyName, orientation, chosenTheme) {
             const { jsPDF } = window.jspdf;
             const isLandscape = orientation === 'l';
-            
-            const doc = new jsPDF({
-                orientation: isLandscape ? 'landscape' : 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-
+            const doc = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
             const pageWidth = isLandscape ? 297 : 210;
             const pageHeight = isLandscape ? 210 : 297;
 
-            // 1. CHOOSE SEPARATE TUNING PARAMETERS BASED ON ORIENTATION
             let totalCols, leftMargin, rightMargin, itemFontSize, categoryFontSize, titleFontSize, rowHeight, lineGapAfterSection, yOffset;
-
             if (isLandscape) {
-                // Landscape Custom Specifications (Horizontal A4)
-                totalCols = 4;
-                leftMargin = 26;  // Pushed inward to avoid Canva side illustrations
-                rightMargin = 26;
-                itemFontSize = 7.5;
-                categoryFontSize = 10.0;
-                titleFontSize = 18;
-                rowHeight = 4.0;
-                lineGapAfterSection = 1.5;
-                yOffset = 26;     // Lowered to avoid top illustrations
+                totalCols = 4; leftMargin = 26; rightMargin = 26; itemFontSize = 7.5; categoryFontSize = 10.0; titleFontSize = 18; rowHeight = 4.0; lineGapAfterSection = 1.5; yOffset = 26;
             } else {
-                // Portrait Custom Specifications (Vertical A4)
-                totalCols = 3;
-                leftMargin = 22;  // Pushed inward to center the columns perfectly
-                rightMargin = 22;
-                itemFontSize = 8.0;
-                categoryFontSize = 11.0;
-                titleFontSize = 22;
-                rowHeight = 5.0;
-                lineGapAfterSection = 3.0;
-                yOffset = 36;     // Lowered significantly to clear the deep ribbon header art
+                totalCols = 3; leftMargin = 22; rightMargin = 22; itemFontSize = 8.0; categoryFontSize = 11.0; titleFontSize = 22; rowHeight = 5.0; lineGapAfterSection = 3.0; yOffset = 36;
             }
-
             const availableWidth = pageWidth - leftMargin - rightMargin;
             const columnWidth = availableWidth / totalCols;
 
@@ -576,34 +759,27 @@
                 blue: { bg: [244, 249, 252], textTitle: [21, 101, 192], textCat: [21, 101, 192], lineCat: [21, 101, 192], textItem: [13, 71, 161], border1: [144, 202, 249] }
             };
             const cfg = themes[chosenTheme] || themes.classic;
-
-            // 2. RENDERS THE SEPARATED TEMPLATE FROM YOUR BACKGROUND SCRIPT
             const templateAsset = (window.THEME_TEMPLATES && window.THEME_TEMPLATES[chosenTheme]) ? window.THEME_TEMPLATES[chosenTheme] : null;
 
             if (templateAsset) {
                 doc.addImage(templateAsset, 'PNG', 0, 0, pageWidth, pageHeight);
             } else {
-                if (cfg.bg) {
-                    doc.setFillColor(cfg.bg[0], cfg.bg[1], cfg.bg[2]);
-                    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-                }
+                if (cfg.bg) { doc.setFillColor(cfg.bg[0], cfg.bg[1], cfg.bg[2]); doc.rect(0, 0, pageWidth, pageHeight, 'F'); }
                 doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
                 doc.setLineWidth(0.5);
                 doc.rect(6, 6, pageWidth - 12, pageHeight - 12);
             }
 
-            // 3. TITLE AND TEXT DRAWING LOOPS WITH STABLE CONTRAST
             const stylizedTitle = babyName ? `${babyName}'s First 100 Foods` : "First 100 Foods";
-            
             doc.setTextColor(cfg.textTitle[0], cfg.textTitle[1], cfg.textTitle[2]);
             doc.setFont('times', 'italic');
             doc.setFontSize(titleFontSize);
             doc.text(stylizedTitle, pageWidth / 2, yOffset, { align: 'center' });
-            
+
             yOffset += isLandscape ? 8 : 12;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(itemFontSize);
-            
+
             let globalMaxTextWidth = 0;
             state.dataset.forEach(category => {
                 category.items.forEach(item => {
@@ -611,447 +787,678 @@
                     if (w > globalMaxTextWidth) globalMaxTextWidth = w;
                 });
             });
-
             const boxSize = 2.0;
             const maximumAllowedTextWidth = columnWidth - boxSize - 4.5;
-            if (globalMaxTextWidth > maximumAllowedTextWidth) {
-                globalMaxTextWidth = maximumAllowedTextWidth;
-            }
+            if (globalMaxTextWidth > maximumAllowedTextWidth) globalMaxTextWidth = maximumAllowedTextWidth;
 
             state.dataset.forEach((category) => {
                 if (yOffset > pageHeight - 18) return;
-
                 yOffset += 1.5;
                 doc.setFont('times', 'bold');
                 doc.setFontSize(categoryFontSize);
-             
-                doc.setTextColor(cfg.textCat[0], cfg.textCat[1], cfg.textCat[2]); 
+                doc.setTextColor(cfg.textCat[0], cfg.textCat[1], cfg.textCat[2]);
                 const catStringNormalized = category.name.toUpperCase();
                 doc.text(catStringNormalized, leftMargin, yOffset);
-
                 const measuredHeadingWidth = doc.getTextWidth(catStringNormalized);
                 yOffset += 0.8;
-                doc.setDrawColor(cfg.lineCat ? cfg.lineCat[0] : cfg.border1[0], cfg.lineCat ? cfg.lineCat[1] : cfg.border1[1], cfg.lineCat ? cfg.lineCat[2] : cfg.border1[2]); 
+                doc.setDrawColor(cfg.lineCat ? cfg.lineCat[0] : cfg.border1[0], cfg.lineCat ? cfg.lineCat[1] : cfg.border1[1], cfg.lineCat ? cfg.lineCat[2] : cfg.border1[2]);
                 doc.setLineWidth(0.2);
                 doc.line(leftMargin, yOffset, leftMargin + measuredHeadingWidth, yOffset);
-  
-                yOffset += 5.2; 
+                yOffset += 5.2;
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(itemFontSize);
                 let currentColIdx = 0;
                 let xPos = leftMargin;
-                
                 category.items.forEach((item) => {
                     doc.setTextColor(cfg.textItem[0], cfg.textItem[1], cfg.textItem[2]);
                     doc.setFont('helvetica', 'normal');
-                    
                     const truncatedItem = doc.splitTextToSize(item, globalMaxTextWidth)[0];
                     doc.text(truncatedItem, xPos, yOffset);
-
                     const boxX = xPos + globalMaxTextWidth + 1.2;
                     const boxY = yOffset - boxSize + 0.2;
-
                     doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
                     doc.setLineWidth(0.15);
                     doc.rect(boxX, boxY, boxSize, boxSize, 'S');
-
                     currentColIdx++;
                     xPos += columnWidth;
-
-                    if(currentColIdx >= totalCols) {
-                        currentColIdx = 0;
-                        xPos = leftMargin;
-                        yOffset += rowHeight;
-                    }
+                    if (currentColIdx >= totalCols) { currentColIdx = 0; xPos = leftMargin; yOffset += rowHeight; }
                 });
-                if(currentColIdx !== 0) {
-                    yOffset += rowHeight;
-                }
-                yOffset += lineGapAfterSection; 
+                if (currentColIdx !== 0) yOffset += rowHeight;
+                yOffset += lineGapAfterSection;
             });
-            
-            const fileNameSanitized = babyName ? babyName.replace(/[^a-z0-9]/gi, '_') : 'Baby';
-            doc.save(`${fileNameSanitized}_First_100_Foods_Poster.pdf`);
-        }
 
-        // ... Keep existing setupLiveSearch(), renderApp(), setupTabIntersectionObserver() functions intact ...
+            const fileNameSanitized = babyName ? babyName.replace(/[^a-z0-9]/gi, '_') : 'Baby';
+            doc.save(`${fileNameSanitized}_First_100_Foods_Tracker.pdf`);
+        }
 
         function updatePriceUI() {
             const checkedRadio = document.querySelector('input[name="pdf-theme"]:checked');
             const priceElement = document.getElementById('txt-active-price');
             if (checkedRadio && priceElement) {
-                if (checkedRadio.value === 'classic') {
-                    priceElement.textContent = '€3.99';
-                } else {
-                    priceElement.textContent = '€4.99';
-                }
+                priceElement.textContent = checkedRadio.value === 'classic' ? '€3.99' : '€4.99';
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initStorage();
-            renderApp();
-            setupLiveSearch();
-
-            // --- SERVERLESS LEMON SQUEEZY REDIRECT CHECKOUT FLOW ---
-            // Check if the user was just redirected back after a successful purchase
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('status') === 'success') {
-                const pendingJob = localStorage.getItem('checkout_pending_poster');
-                if (pendingJob) {
-                    try {
-                        const jobData = JSON.parse(pendingJob);
-                        // Instantly process and download the centralized layout configuration
-                        exportSinglePagePDF(jobData.name, jobData.orientation, jobData.theme);
-                        // Wipe payload from memory cache so refreshes don't cause duplicate downloads
-                        localStorage.removeItem('checkout_pending_poster');
-                        // Clear the success parameter clean from the browser's address bar look
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    } catch (e) {
-                        console.error("Error processing your keepsake output:", e);
-                    }
-                }
-            }
-
-            document.getElementById('btn-buy-poster').addEventListener('click', () => {
-                const babyNameVal = document.getElementById('pdf-baby-name').value.trim();
-                const selectedOrientation = document.querySelector('input[name="pdf-orientation"]:checked').value;
-                const selectedTheme = document.querySelector('input[name="pdf-theme"]:checked').value;
-                
-                // Cache user choices locally so they are preserved through the checkout redirect loop
-                const checkoutJobPayload = {
-                    name: babyNameVal,
-                    orientation: selectedOrientation,
-                    theme: selectedTheme
-                };
-                localStorage.setItem('checkout_pending_poster', JSON.stringify(checkoutJobPayload));
-                
-                // PLACE YOUR ACTUAL LEMON SQUEEZY OVERLAY CHECKOUT LINK HERE:
-                window.location.href = "https://kiddosspace.lemonsqueezy.com/checkout/..."; 
-            });
-
-            // ... Keep all modal close/open and storage sync handlers intact ...
-        });
-
-        function setupLiveSearch() {
-            const searchBar = document.getElementById('search-bar');
-            searchBar.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase().trim();
-                const cardNodes = document.querySelectorAll('.food-card-wrapper');
-                
-                cardNodes.forEach(card => {
-                    const foodLabel = card.getAttribute('data-food-name');
-                    if (foodLabel.includes(query)) {
-                        card.classList.remove('hidden');
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                });
-
-                state.dataset.forEach(category => {
-                    const section = document.getElementById(`sec-${category.id}`);
-                    const visibleChildren = section.querySelectorAll('.food-card-wrapper:not(.hidden)');
-                    if (visibleChildren.length === 0 && query !== '') {
-                        section.classList.add('opacity-30');
-                    } else {
-                        section.classList.remove('opacity-30');
-                    }
-                });
-            });
-        }
-
-        function renderApp() {
-            const stats = calculateStats();
-            document.getElementById('global-count').textContent = stats.triedCount;
-            document.getElementById('global-total-label').textContent = `/ ${stats.totalItems}`;
-            document.getElementById('global-percentage').textContent = `${stats.percentage}%`;
-            document.getElementById('global-progress-bar').style.width = `${stats.percentage}%`;
-
-            const fastStatsContainer = document.getElementById('category-stats');
-            const navTabsContainer = document.getElementById('category-tabs');
-            const masterGridContainer = document.getElementById('foods-master-container');
-
-            fastStatsContainer.innerHTML = '';
-            navTabsContainer.innerHTML = '';
-            masterGridContainer.innerHTML = '';
-            
-            state.dataset.forEach((category) => {
-                const catStat = stats.categoryBreakdown[category.id] || { tried: 0, total: 0 };
-                const catPct = catStat.total > 0 ? Math.round((catStat.tried / catStat.total) * 100) : 0;
-
-                const statCard = document.createElement('a');
-                statCard.href = `#sec-${category.id}`;
-                statCard.className = "flex-shrink-0 snap-start bg-white border border-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-3 shadow-sm hover:border-sage/40 transition min-w-[145px]";
-                statCard.innerHTML = `
-                    <div>
-                        <span class="block text-xs font-semibold text-charcoal truncate max-w-[100px]">${category.name}</span>
-                        <span class="text-[10px] text-gray-400 font-medium">${catStat.tried}/${catStat.total} Items</span>
+        // ---------- Build the scrollytelling chapters ----------
+        function foodPillHTML(category, foodName) {
+            const uniqueId = generateSlug(category.id, foodName);
+            const isTried = state.tried.includes(uniqueId);
+            return `
+                <div class="food-card-wrapper" data-food-name="${foodName.toLowerCase()}">
+                    <div class="food-pill relative group flex items-center gap-2 pl-3.5 pr-2 py-2.5 rounded-full border transition-colors ${isTried ? 'bg-[#E3F4E8] border-[#A9D9BB] text-charcoal shadow-sm' : 'bg-white/80 border-charcoal/10 text-charcoal hover:border-clay/50'}">
+                        <button type="button" data-action="toggle" data-id="${uniqueId}" class="flex-1 flex items-center gap-2 text-left overflow-hidden">
+                            <span class="tick-circle relative flex-shrink-0 w-5 h-5 ${isTried ? 'bg-sage text-white border border-sage' : 'border border-charcoal/20'} rounded-full flex items-center justify-center transition-all">
+                                ${isTried ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>' : ''}
+                            </span>
+                            <span class="text-sm ${isTried ? 'font-semibold' : 'font-normal'} tracking-tight truncate">${foodName}</span>
+                        </button>
+                        <button type="button" data-action="delete" data-category="${category.id}" data-item="${foodName}" class="flex-shrink-0 w-5 h-5 flex items-center justify-center ${isTried ? 'text-charcoal/40 hover:text-red-500' : 'text-gray-300 hover:text-red-500'} rounded-full transition opacity-0 group-hover:opacity-100 focus:opacity-100 text-base font-bold" title="Delete ${foodName}">×</button>
                     </div>
-                    <div class="ml-auto text-xs font-bold text-sage">${catPct}%</div>
-                `;
-                fastStatsContainer.appendChild(statCard);
+                </div>`;
+        }
 
-                const tabItem = document.createElement('a');
-                tabItem.href = `#sec-${category.id}`;
-                tabItem.className = "border-b-2 border-transparent pb-3 text-sm font-medium text-gray-500 hover:text-charcoal whitespace-nowrap transition-colors";
-                tabItem.textContent = category.name;
-                navTabsContainer.appendChild(tabItem);
+        function buildChapters() {
+            const container = document.getElementById('chapters-container');
+            const dotNav = document.getElementById('dot-nav');
+            container.innerHTML = '';
+            dotNav.innerHTML = '';
 
-                const sectionBlock = document.createElement('section');
-                sectionBlock.id = `sec-${category.id}`;
-                sectionBlock.className = "scroll-mt-[270px] md:scroll-mt-[220px] transition-opacity duration-300";
-                let cardsHTML = '';
-                
-                category.items.forEach((foodName) => {
-                    const uniqueId = generateSlug(category.id, foodName);
-                    const isTried = state.tried.includes(uniqueId);
-                    
-                    cardsHTML += `
-                        <div class="food-card-wrapper transition-all duration-200" data-food-name="${foodName.toLowerCase()}">
-                            <div class="food-card relative group flex items-center justify-between px-3.5 py-3 rounded-2xl border ${isTried ? 'bg-[#F0F7F6] border-[#83C5BE]/50' : 'bg-white border-gray-200/80'} text-charcoal shadow-sm">
-                                <button data-action="toggle" data-id="${uniqueId}" class="flex-1 flex items-center justify-between text-left mr-1 overflow-hidden">
-                                    <span class="text-xs sm:text-sm ${isTried ? 'font-medium' : 'font-light'} tracking-tight pr-1 truncate">${foodName}</span>
-                                    <span class="flex-shrink-0 w-5 h-5 ${isTried ? 'bg-sage text-white' : 'border border-gray-200'} rounded-full flex items-center justify-center scale-90 transition-transform active:scale-90">
-                                        ${isTried ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>' : ''}
-                                    </span>
-                                </button>
-                                <button data-action="delete" data-category="${category.id}" data-item="${foodName}" class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-200/50 transition opacity-0 group-hover:opacity-100 focus:opacity-100 text-sm font-bold" title="Delete ${foodName}">×</button>
+            // Hero dot
+            dotNav.innerHTML += `
+                <button class="dot-nav-item active flex items-center gap-2 group" data-target="hero" title="Intro">
+                    <span class="dot-label text-[11px] font-semibold text-charcoal bg-white/80 px-2 py-0.5 rounded-full shadow-sm">Start</span>
+                    <span class="dot w-2.5 h-2.5 rounded-full bg-charcoal/25"></span>
+                </button>`;
+
+            state.dataset.forEach((category, idx) => {
+                const meta = CHAPTER_META[category.id] || { emoji: "🍽️", tone: "#E29578", intro: "A fresh set of first tastes to explore together." };
+                const num = String(idx + 1).padStart(2, '0');
+
+                const pillsHTML = category.items.map(f => foodPillHTML(category, f)).join('');
+                const emptyHTML = category.items.length === 0
+                    ? '<div class="col-span-full text-center text-xs text-charcoal/40 font-light py-5 bg-white/40 border border-dashed border-charcoal/15 rounded-2xl">No items here yet. Add a custom one above!</div>'
+                    : '';
+
+                const section = document.createElement('section');
+                section.className = 'chapter';
+                section.id = `chapter-${category.id}`;
+                section.setAttribute('data-chapter', category.id);
+                section.style.setProperty('--tone', meta.tone);
+
+                section.innerHTML = `
+                    <div class="ghost-numeral text-[40vw] sm:text-[26vw] -top-[4vh] -left-[2vw]" style="color:${meta.tone}">${num}</div>
+                    <span class="blob w-64 h-64 -bottom-16 -right-12" style="background:${meta.tone}"></span>
+                    <span class="blob w-40 h-40 top-16 left-6 hidden sm:block" style="background:${meta.tone};opacity:.35"></span>
+
+                    <div class="relative z-10 w-full max-w-5xl mx-auto px-5 sm:px-8 py-24 flex flex-col h-full justify-center">
+                        <header class="flex-shrink-0">
+                            <div class="reveal flex items-center gap-3 mb-3" style="--reveal-delay:40ms">
+                                <span class="font-serif text-sm font-semibold tracking-[0.2em] text-charcoal/40">${num} / 0${state.dataset.length}</span>
+                                <span class="h-px flex-1 max-w-[60px]" style="background:${meta.tone}"></span>
+                                <span class="text-2xl float-soft">${meta.emoji}</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                                <div>
+                                    <h2 class="reveal font-serif text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.03em] text-charcoal leading-[0.95]" style="--reveal-delay:120ms">${category.name}</h2>
+                                    <p class="reveal text-sm sm:text-base text-charcoal/50 font-light mt-3 sm:whitespace-nowrap leading-relaxed" style="--reveal-delay:220ms">${meta.intro}</p>
+                                </div>
+                                <div class="reveal flex-shrink-0 text-right" style="--reveal-delay:300ms">
+                                    <div class="text-4xl font-serif font-semibold text-charcoal" data-cat-pct="${category.id}">0%</div>
+                                    <div class="text-xs font-medium text-charcoal/40 uppercase tracking-wider" data-cat-count="${category.id}">0 / ${category.items.length} tried</div>
+                                    <div class="w-32 h-1.5 bg-charcoal/10 rounded-full overflow-hidden mt-2 ml-auto">
+                                        <div class="h-full rounded-full transition-all duration-700" style="width:0%;background:${meta.tone}" data-cat-bar="${category.id}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div class="reveal mt-6 sm:mt-8 flex-1 min-h-0 flex flex-col" style="--reveal-delay:360ms">
+                            <form data-action="add-food" data-category="${category.id}" class="flex items-center gap-2 mb-4 max-w-xs">
+                                <input type="text" placeholder="+ Add custom ${category.name.toLowerCase().replace(/s$/, '')}" required
+                                    class="flex-1 bg-white/70 border border-charcoal/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-clay focus:bg-white transition placeholder:text-charcoal/30 font-light" />
+                                <button type="submit" class="flex-shrink-0 bg-charcoal text-white text-sm font-medium px-4 py-2 rounded-full shadow-sm hover:bg-ink transition">Add</button>
+                            </form>
+                            <div class="overflow-y-auto custom-scrollbar pr-1 -mr-1">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5" data-cat-grid="${category.id}">
+                                    ${pillsHTML}${emptyHTML}
+                                </div>
                             </div>
                         </div>
-                    `;
-                });
+                    </div>
+                    <div class="scroll-cue absolute bottom-24 left-1/2 -translate-x-1/2 text-charcoal/25">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                    </div>`;
+                container.appendChild(section);
 
-                sectionBlock.innerHTML = `
-                    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between border-b border-gray-100 pb-3 mb-6 gap-2">
-                        <div class="flex items-baseline gap-3">
-                            <h2 class="font-serif text-lg sm:text-xl font-medium text-clay">${category.name}</h2>
-                            <span class="text-xs font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-0.5 rounded-full">${catStat.tried} / ${catStat.total} done</span>
-                        </div>
-                        <form data-action="add-food" data-category="${category.id}" class="flex items-center gap-2 max-w-xs w-full sm:w-auto">
-                            <input type="text" placeholder="+ Add custom ${category.name.toLowerCase().slice(0,-1)}" required 
-                                class="w-full sm:w-48 bg-white/60 border border-gray-200 rounded-xl px-3 py-1 text-xs focus:outline-none focus:border-sage focus:bg-white transition-all placeholder:text-gray-400 font-light" />
-                            <button type="submit" class="bg-sage text-white text-xs font-medium px-3 py-1 rounded-xl shadow-sm hover:bg-sage/90 transition-all flex-shrink-0">Add</button>
-                        </form>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                        ${cardsHTML}
-                        ${category.items.length === 0 ? '<div class="col-span-full text-center text-xs text-gray-400 font-light py-4 bg-gray-50/50 border border-dashed border-gray-200 rounded-2xl">No items present here yet. Add custom alternatives above!</div>' : ''}
-                    </div>
-                `;
-                masterGridContainer.appendChild(sectionBlock);
+                // dot nav item
+                dotNav.innerHTML += `
+                    <button class="dot-nav-item flex items-center gap-2 group" data-target="chapter-${category.id}" title="${category.name}">
+                        <span class="dot-label text-[11px] font-semibold text-charcoal bg-white/80 px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">${category.name}</span>
+                        <span class="dot w-2.5 h-2.5 rounded-full bg-charcoal/25"></span>
+                    </button>`;
             });
-            
-            setupTabIntersectionObserver();
-            const query = document.getElementById('search-bar').value.toLowerCase().trim();
-            if(query !== '') {
-                document.getElementById('search-bar').dispatchEvent(new Event('input'));
+
+            // Outro dot
+            dotNav.innerHTML += `
+                <button class="dot-nav-item flex items-center gap-2 group" data-target="" data-outro="1" title="Your tracker">
+                    <span class="dot-label text-[11px] font-semibold text-charcoal bg-white/80 px-2 py-0.5 rounded-full shadow-sm">Tracker</span>
+                    <span class="dot w-2.5 h-2.5 rounded-full bg-charcoal/25"></span>
+                </button>`;
+        }
+
+        // ---------- Render: update all live numbers + rebuild pills ----------
+        function renderApp() {
+            buildChapters();
+            updateAllStats();
+            wireChapterObservers();
+            wireRevealObservers();
+            // Re-apply an active search filter if the overlay is open
+            const searchBar = document.getElementById('search-bar');
+            if (document.getElementById('search-overlay').classList.contains('hidden') === false && searchBar.value.trim() !== '') {
+                runSearch(searchBar.value);
             }
         }
 
-        function setupTabIntersectionObserver() {
-            const sections = document.querySelectorAll('#foods-master-container section');
-            const tabLinks = document.querySelectorAll('#category-tabs a');
-            
-            const options = {
-                root: null,
-                rootMargin: '-240px 0px -35% 0px',
-                threshold: 0
-            };
-            const observer = new IntersectionObserver((entries) => {
+        function updateAllStats() {
+            const stats = calculateStats();
+            // HUD
+            document.getElementById('hud-count').textContent = stats.triedCount;
+            document.getElementById('hud-total').textContent = stats.totalItems;
+            document.getElementById('hud-percent').textContent = `${stats.percentage}%`;
+            document.getElementById('hud-progress-bar').style.width = `${stats.percentage}%`;
+            const circ = 2 * Math.PI * 19;
+            document.getElementById('hud-ring').style.strokeDashoffset = `${circ - (circ * stats.percentage / 100)}`;
+            // Outro
+            document.getElementById('outro-count').textContent = stats.triedCount;
+            // Per-chapter
+            state.dataset.forEach(category => {
+                const cs = stats.categoryBreakdown[category.id] || { tried: 0, total: 0 };
+                const pct = cs.total > 0 ? Math.round((cs.tried / cs.total) * 100) : 0;
+                const pctEl = document.querySelector(`[data-cat-pct="${category.id}"]`);
+                const cntEl = document.querySelector(`[data-cat-count="${category.id}"]`);
+                const barEl = document.querySelector(`[data-cat-bar="${category.id}"]`);
+                if (pctEl) pctEl.textContent = `${pct}%`;
+                if (cntEl) cntEl.textContent = `${cs.tried} / ${cs.total} tried`;
+                if (barEl) barEl.style.width = `${pct}%`;
+            });
+        }
+
+        // ---------- Scroll-spy: chapter in-view + dot nav active ----------
+        let chapterObserver = null;
+        function wireChapterObservers() {
+            if (chapterObserver) chapterObserver.disconnect();
+            const chapters = document.querySelectorAll('#stage .chapter');
+            const dotItems = document.querySelectorAll('#dot-nav .dot-nav-item');
+            chapterObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const activeId = entry.target.id;
-                        tabLinks.forEach(link => {
-                            if (link.getAttribute('href') === `#${activeId}`) {
-                                link.className = "border-b-2 border-clay pb-3 text-sm font-medium text-clay whitespace-nowrap transition-colors";
-                                link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                            } else {
-                                link.className = "border-b-2 border-transparent pb-3 text-sm font-medium text-gray-500 hover:text-charcoal whitespace-nowrap transition-colors";
-                            }
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+                        entry.target.classList.add('in-view');
+                        const ch = entry.target.getAttribute('data-chapter');
+                        dotItems.forEach(d => {
+                            const isOutro = d.getAttribute('data-outro') === '1' && ch === 'outro';
+                            const matches = d.getAttribute('data-target') === entry.target.id;
+                            d.classList.toggle('active', matches || isOutro);
                         });
                     }
                 });
-            }, options);
-            sections.forEach(section => observer.observe(section));
+            }, { root: document.getElementById('stage'), threshold: [0, 0.55, 1] });
+            chapters.forEach(c => chapterObserver.observe(c));
         }
 
-        function updatePriceUI() {
-            const checkedRadio = document.querySelector('input[name="pdf-theme"]:checked');
-            const priceElement = document.getElementById('txt-active-price');
-            if (checkedRadio && priceElement) {
-                if (checkedRadio.value === 'classic') {
-                    priceElement.textContent = '€3.99';
-                } else {
-                    priceElement.textContent = '€4.99';
+        // ---------- Reveal observer (one-shot per element) ----------
+        let revealObserver = null;
+        function wireRevealObservers() {
+            // The chapter.in-view class drives reveals; ensure first chapter shows immediately
+            const first = document.querySelector('#stage .chapter');
+            if (first) first.classList.add('in-view');
+        }
+
+        // ---------- Dot nav + jump clicks ----------
+        function jumpToChapter(targetId, outro) {
+            const stage = document.getElementById('stage');
+            let el;
+            if (outro) el = document.querySelector('[data-chapter="outro"]');
+            else if (targetId) el = document.getElementById(targetId);
+            if (el) stage.scrollTo({ top: el.offsetTop, behavior: 'smooth' });
+        }
+
+        // ---------- Search ----------
+        function openSearch() {
+            const ov = document.getElementById('search-overlay');
+            document.getElementById('stage').classList.add('search-mode');
+            ov.classList.remove('hidden');
+            setTimeout(() => ov.classList.remove('opacity-0'), 10);
+            const sb = document.getElementById('search-bar');
+            setTimeout(() => sb.focus(), 120);
+            runSearch(sb.value);
+        }
+        function closeSearch() {
+            const ov = document.getElementById('search-overlay');
+            ov.classList.add('opacity-0');
+            document.getElementById('stage').classList.remove('search-mode');
+            setTimeout(() => ov.classList.add('hidden'), 300);
+        }
+        function runSearch(rawQuery) {
+            const query = (rawQuery || '').toLowerCase().trim();
+            const results = document.getElementById('search-results');
+            const meta = document.getElementById('search-meta');
+            const stats = calculateStats();
+            let html = '';
+            let matchCount = 0;
+
+            state.dataset.forEach(category => {
+                const matched = category.items.filter(item =>
+                    query === '' ? true : item.toLowerCase().includes(query)
+                );
+                if (matched.length === 0) return;
+                matchCount += matched.length;
+                const cs = stats.categoryBreakdown[category.id] || { tried: 0, total: 0 };
+                html += `
+                    <div class="mb-7">
+                        <div class="flex items-baseline gap-2 mb-3">
+                            <h3 class="font-serif text-lg font-semibold text-charcoal">${category.name}</h3>
+                            <span class="text-xs text-charcoal/40 font-medium">${cs.tried}/${cs.total}</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            ${matched.map(f => foodPillHTML(category, f)).join('')}
+                        </div>
+                    </div>`;
+            });
+
+            if (query === '') {
+                meta.textContent = `Showing all ${stats.totalItems} foods. Tap any to mark it tried.`;
+            } else if (matchCount === 0) {
+                meta.textContent = `No foods match "${rawQuery.trim()}". Try another spelling.`;
+                html = `<div class="text-center py-16 text-charcoal/40 font-light">Nothing found — but you can add it as a custom food inside its chapter.</div>`;
+            } else {
+                meta.textContent = `${matchCount} food${matchCount === 1 ? '' : 's'} match "${rawQuery.trim()}".`;
+            }
+            results.innerHTML = html;
+        }
+
+        // ---------- Modal helpers ----------
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            if (modal.id === 'modal-premium') { renderThemeSelector(); updatePriceUI(); }
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                const interior = modal.querySelector('.transform');
+                if (interior) interior.classList.remove('scale-95', 'scale-90');
+            }, 10);
+        }
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            const interior = modal.querySelector('.transform');
+            if (interior) interior.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 400);
+        }
+
+        // Locate a food's {category, foodName} from its slug id
+        function findFoodBySlug(slug) {
+            for (const c of state.dataset) {
+                for (const it of c.items) {
+                    if (generateSlug(c.id, it) === slug) return { category: c, foodName: it };
                 }
+            }
+            return null;
+        }
+
+        // Surgically refresh just the pill(s) for one food — animate ONLY the one the user clicked.
+        function refreshFoodPill(foodId, clickedWrapper, animate) {
+            const found = findFoodBySlug(foodId);
+            if (!found) return;
+            document.querySelectorAll('.food-card-wrapper').forEach(w => {
+                const b = w.querySelector('button[data-action="toggle"]');
+                if (!b || b.getAttribute('data-id') !== foodId) return;
+                const tmp = document.createElement('div');
+                tmp.innerHTML = foodPillHTML(found.category, found.foodName).trim();
+                const fresh = tmp.firstElementChild;
+                if (w === clickedWrapper && animate) {
+                    const pill = fresh.querySelector('.food-pill');
+                    if (pill) pill.classList.add('just-ticked');
+                }
+                w.replaceWith(fresh);
+            });
+        }
+
+        // ---------- Toggle / delete / add handler (shared across stage + search) ----------
+        function handleFoodClick(e) {
+            const toggleBtn = e.target.closest('button[data-action="toggle"]');
+            if (toggleBtn) {
+                const foodId = toggleBtn.getAttribute('data-id');
+                const clickedWrapper = toggleBtn.closest('.food-card-wrapper');
+                const index = state.tried.indexOf(foodId);
+                const nowTried = index === -1;
+                if (index > -1) {
+                    state.tried.splice(index, 1);
+                } else {
+                    state.tried.push(foodId);
+                    const currentStats = calculateStats();
+                    evaluateMilestoneTriggers(currentStats.percentage);
+                }
+                saveStorage();
+                // Update only the affected pill(s) + stats — no full re-render, so nothing else re-animates.
+                refreshFoodPill(foodId, clickedWrapper, nowTried);
+                updateAllStats();
+                if (nowTried) maybeShowKeepsakeNudge();
+                return true;
+            }
+            const deleteBtn = e.target.closest('button[data-action="delete"]');
+            if (deleteBtn) {
+                const targetCategory = deleteBtn.getAttribute('data-category');
+                const targetItemName = deleteBtn.getAttribute('data-item');
+                const targetSlug = generateSlug(targetCategory, targetItemName);
+                if (confirm(`Remove "${targetItemName}" from your tracking checklist?`)) {
+                    const categoryObj = state.dataset.find(c => c.id === targetCategory);
+                    if (categoryObj) categoryObj.items = categoryObj.items.filter(item => item !== targetItemName);
+                    state.tried = state.tried.filter(id => id !== targetSlug);
+                    saveStorage();
+                    renderApp();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function handleAddSubmit(e) {
+            const addForm = e.target.closest('form[data-action="add-food"]');
+            if (!addForm) return;
+            e.preventDefault();
+            const targetCategory = addForm.getAttribute('data-category');
+            const inputElement = addForm.querySelector('input');
+            const newItemName = inputElement.value.trim();
+            if (!newItemName) return;
+
+            const currentStats = calculateStats();
+            if (currentStats.totalItems >= 100) {
+                alert("Layout limit reached: the single-page tracker holds 100 total foods. Please delete an item before adding a custom one.");
+                return;
+            }
+            const categoryObj = state.dataset.find(c => c.id === targetCategory);
+            if (categoryObj) {
+                const lowercaseItems = categoryObj.items.map(i => i.toLowerCase());
+                if (lowercaseItems.includes(newItemName.toLowerCase())) {
+                    alert("This food already exists in this chapter.");
+                    return;
+                }
+                categoryObj.items.push(newItemName);
+                saveStorage();
+                renderApp();
             }
         }
 
+        // ---------- Live keepsake preview (HTML mock overlaid on the theme art) ----------
+        function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function posterPreviewHTML(theme, name) {
+            const tpl = (window.THEME_TEMPLATES && window.THEME_TEMPLATES[theme]) ? window.THEME_TEMPLATES[theme] : null;
+            const display = (name && name.trim()) ? name.trim() : 'Nadin';
+            const bg = tpl ? `background-image:url('${tpl}')` : 'background-color:#FFF8F2;box-shadow:inset 0 0 0 2px rgba(226,149,120,.35),0 6px 18px rgba(43,45,66,.16)';
+            let foods = '';
+            state.dataset.forEach(cat => {
+                foods += `<div class="pp-cat">${escapeHtml(cat.name)}</div><div class="pp-cat-grid">`;
+                // Always the blank default checklist — the product is a clean printable tracker, not the user's tracked data
+                cat.items.forEach(it => {
+                    foods += `<div class="pp-food"><span class="pp-name">${escapeHtml(it)}</span><span class="pp-box"></span></div>`;
+                });
+                foods += `</div>`;
+            });
+            return `<div class="poster-preview" style="${bg}"><div class="pp-inner"><div class="pp-title">${escapeHtml(display)}'s First 100 Foods</div>${foods}</div></div>`;
+        }
+        // Keep titles in sync as the name is typed (cheap — no full re-render of the art)
+        function updatePreviewTitles() {
+            const display = (document.getElementById('pdf-baby-name').value || '').trim() || 'Nadin';
+            document.querySelectorAll('.poster-preview .pp-title').forEach(el => { el.textContent = `${display}'s First 100 Foods`; });
+        }
+        // Build the theme picker as real keepsake mockups (template art + title + ticked foods)
+        function renderThemeSelector() {
+            const container = document.getElementById('theme-selector-container');
+            if (!container) return;
+            const name = document.getElementById('pdf-baby-name').value;
+            const selected = (document.querySelector('input[name="pdf-theme"]:checked') || {}).value || 'classic';
+            const themes = [
+                { v: 'classic', label: 'Minimalist Classic' },
+                { v: 'pink', label: 'Ribbon & Cherry 🎀' },
+                { v: 'sage', label: 'Tomato & Car 🚗' },
+                { v: 'blue', label: 'Monkey & Banana 🐒' }
+            ];
+            container.innerHTML = themes.map(t => `
+                <label class="theme-card cursor-pointer block rounded-2xl border-2 ${t.v === selected ? 'border-clay' : 'border-transparent'} hover:border-clay/40 transition-all p-1.5 bg-gray-50" data-theme-card="${t.v}">
+                    <input type="radio" name="pdf-theme" value="${t.v}" ${t.v === selected ? 'checked' : ''} class="sr-only" />
+                    ${posterPreviewHTML(t.v, name)}
+                    <span class="mt-1.5 block text-center text-[11px] font-medium text-charcoal">${t.label}</span>
+                </label>`).join('');
+        }
+
+        // ---------- Keepsake buy-nudge (after a few foods tried) ----------
+        function showKeepsakeNudge() {
+            const holder = document.getElementById('keepsake-nudge-images');
+            if (holder) {
+                const name = (document.getElementById('pdf-baby-name').value || '').trim() || 'Nadin';
+                const order = [
+                    { v: 'pink', label: 'Ribbon & Cherry' },
+                    { v: 'sage', label: 'Tomato & Car' },
+                    { v: 'blue', label: 'Monkey & Banana' }
+                ];
+                holder.innerHTML = order.map(t => `
+                    <figure class="m-0">
+                        ${posterPreviewHTML(t.v, name)}
+                        <figcaption class="text-[10px] text-gray-400 mt-1">${t.label}</figcaption>
+                    </figure>`).join('');
+            }
+            openModal(document.getElementById('modal-keepsake-nudge'));
+        }
+        let keepsakeNudgeShown = false; // in-memory only — resets on every page load/refresh
+        function maybeShowKeepsakeNudge() {
+            if (keepsakeNudgeShown) return;
+            if (calculateStats().triedCount < 3) return;
+            // don't stack on top of a milestone celebration
+            if (!document.getElementById('modal-celebration').classList.contains('hidden')) return;
+            keepsakeNudgeShown = true;
+            showKeepsakeNudge();
+        }
+
+        // ============ SINGLE consolidated DOMContentLoaded ============
         document.addEventListener('DOMContentLoaded', () => {
             initStorage();
             renderApp();
-            setupLiveSearch();
 
-            const masterContainer = document.getElementById('foods-master-container');
+            const stage = document.getElementById('stage');
 
-            masterContainer.addEventListener('click', (e) => {
-                const toggleBtn = e.target.closest('button[data-action="toggle"]');
-                if (toggleBtn) {
-                    const foodId = toggleBtn.getAttribute('data-id');
-                    const index = state.tried.indexOf(foodId);
+            // Food toggles / deletes (event delegation across both stage + search overlay)
+            stage.addEventListener('click', handleFoodClick);
+            stage.addEventListener('submit', handleAddSubmit);
+            document.getElementById('search-results').addEventListener('click', handleFoodClick);
 
-                    if (index > -1) {
-                        state.tried.splice(index, 1);
-                    } else {
-                        state.tried.push(foodId);
-                        const currentStats = calculateStats();
-                        evaluateMilestoneTriggers(currentStats.percentage);
-                    }
-                    saveStorage();
-                    renderApp();
-                    return;
-                }
-
-                const deleteBtn = e.target.closest('button[data-action="delete"]');
-                if (deleteBtn) {
-                    const targetCategory = deleteBtn.getAttribute('data-category');
-                    const targetItemName = deleteBtn.getAttribute('data-item');
-                    const targetSlug = generateSlug(targetCategory, targetItemName);
-
-                    if(confirm(`Remove "${targetItemName}" from your tracking checklist?`)) {
-                        const categoryObj = state.dataset.find(c => c.id === targetCategory);
-                        if(categoryObj) {
-                            categoryObj.items = categoryObj.items.filter(item => item !== targetItemName);
-                        }
-                        state.tried = state.tried.filter(id => id !== targetSlug);
-                        saveStorage();
-                        renderApp();
-                    }
-                    return;
-                }
+            // Dot nav
+            document.getElementById('dot-nav').addEventListener('click', (e) => {
+                const item = e.target.closest('.dot-nav-item');
+                if (!item) return;
+                jumpToChapter(item.getAttribute('data-target'), item.getAttribute('data-outro') === '1');
             });
 
-            masterContainer.addEventListener('submit', (e) => {
-                const addForm = e.target.closest('form[data-action="add-food"]');
-                if (!addForm) return;
-                
-                e.preventDefault();
-                const targetCategory = addForm.getAttribute('data-category');
-                const inputElement = addForm.querySelector('input');
-                const newItemName = inputElement.value.trim();
-
-                if(!newItemName) return;
-
-                const currentStats = calculateStats();
-                if (currentStats.totalItems >= 100) {
-                    alert("Milestone Layout Protection Active: The single-page keepsake configuration has hit its 100 total item layout limit. Please delete an item to add custom ones.");
-                    return;
-                }
-
-                const categoryObj = state.dataset.find(c => c.id === targetCategory);
-                if (categoryObj) {
-                    const lowercaseItems = categoryObj.items.map(i => i.toLowerCase());
-                    if (lowercaseItems.includes(newItemName.toLowerCase())) {
-                        alert("This item already exists inside this mapping section.");
-                        return;
-                    }
-
-                    categoryObj.items.push(newItemName);
-                    saveStorage();
-                    renderApp();
-                    inputElement.value = '';
-                }
+            // Hero "Begin" button -> first chapter
+            document.querySelector('[data-jump="first"]').addEventListener('click', () => {
+                const first = document.querySelector('#chapters-container .chapter');
+                if (first) stage.scrollTo({ top: first.offsetTop, behavior: 'smooth' });
             });
 
-            document.getElementById('btn-quick-reset').addEventListener('click', () => {
-                if(confirm("Are you sure you want to start over? This will permanently erase your progress and custom foods. This can't be undone.")) {
+            // Reset (hero + settings)
+            function doReset() {
+                if (confirm("Start over? This permanently erases your progress and custom foods. This can't be undone.")) {
                     resetToSystemDefault();
                     renderApp();
-                    alert("Milestone tracking checklist data logs successfully flushed back to base parameters.");
+                    alert("Your tracking checklist has been reset to the original 100 foods.");
+                    return true;
+                }
+                return false;
+            }
+            document.getElementById('btn-quick-reset').addEventListener('click', doReset);
+
+            // Search overlay
+            document.getElementById('btn-open-search').addEventListener('click', openSearch);
+            document.getElementById('btn-close-search').addEventListener('click', closeSearch);
+            document.getElementById('search-bar').addEventListener('input', (e) => runSearch(e.target.value));
+
+            // Modals
+            const modalPremium = document.getElementById('modal-premium');
+            const modalSettings = document.getElementById('modal-settings');
+            const modalCelebration = document.getElementById('modal-celebration');
+            const modalNudge = document.getElementById('modal-keepsake-nudge');
+
+            document.getElementById('btn-open-poster').addEventListener('click', () => openModal(modalPremium));
+            document.getElementById('btn-open-poster-2').addEventListener('click', () => openModal(modalPremium));
+            document.getElementById('btn-banner-poster').addEventListener('click', () => openModal(modalPremium));
+
+            // Keepsake nudge → open the poster modal
+            document.getElementById('btn-nudge-buy').addEventListener('click', () => {
+                closeModal(modalNudge);
+                setTimeout(() => openModal(modalPremium), 280);
+            });
+
+            // FAQ overlay open/close
+            const faqOverlay = document.getElementById('faq-overlay');
+            const openFaq = () => { faqOverlay.classList.remove('hidden'); setTimeout(() => faqOverlay.classList.remove('opacity-0'), 10); };
+            const closeFaq = () => { faqOverlay.classList.add('opacity-0'); setTimeout(() => faqOverlay.classList.add('hidden'), 300); };
+            document.getElementById('btn-open-faq').addEventListener('click', openFaq);
+            document.getElementById('btn-close-faq').addEventListener('click', closeFaq);
+
+            // Contact form → emails support@ via FormSubmit (no mail client needed; works on the live site).
+            // After you activate the form, swap this for the hashed endpoint to hide the address:
+            //   const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/<your-hash>';
+            const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/support@myfirst100foods.com';
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                let lastSent = 0; // throttle: block rapid repeat submissions
+                contactForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const status = document.getElementById('contact-status');
+                    const btn = document.getElementById('contact-submit');
+                    const email = document.getElementById('contact-email').value.trim();
+                    const message = document.getElementById('contact-message').value.trim();
+                    const showStatus = (cls, txt, html) => {
+                        status.classList.remove('hidden');
+                        status.className = 'text-xs text-center ' + cls;
+                        if (html) status.innerHTML = html; else status.textContent = txt;
+                    };
+
+                    // Honeypot: if the hidden field is filled, it's a bot — silently "succeed" and bail.
+                    if (document.getElementById('contact-hp').value) {
+                        showStatus('font-medium text-[#2f8f6f]', 'Thank you! Your message is on its way. 💌');
+                        contactForm.reset();
+                        return;
+                    }
+                    if (!email || !message) return;
+                    if (message.length < 5) { showStatus('text-red-500', 'Please add a little more detail to your message.'); return; }
+                    if (Date.now() - lastSent < 15000) { showStatus('text-gray-400', 'Just a moment before sending again…'); return; }
+
+                    btn.disabled = true; btn.textContent = 'Sending…';
+                    showStatus('text-gray-400', 'Sending your message…');
+                    try {
+                        const res = await fetch(CONTACT_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({
+                                email, message,
+                                _subject: 'New message from My First 100 Foods',
+                                _captcha: 'true', _honey: '', _template: 'table'
+                            })
+                        });
+                        if (!res.ok) throw new Error('Request failed');
+                        lastSent = Date.now();
+                        showStatus('font-medium text-[#2f8f6f]', 'Thank you! Your message is on its way. 💌');
+                        contactForm.reset();
+                    } catch (err) {
+                        showStatus('text-red-500', null, 'Sorry, that didn\'t send. Please email <a href="mailto:support@myfirst100foods.com" class="underline">support@myfirst100foods.com</a> directly.');
+                    } finally {
+                        btn.disabled = false; btn.textContent = 'Send message';
+                    }
+                });
+            }
+
+            // Banner — dismissible for the current view only; reappears on every page refresh/visit
+            const promoBanner = document.getElementById('promo-banner');
+            const bannerPrev = document.getElementById('banner-keepsake-preview');
+            if (bannerPrev) {
+                const nm = document.getElementById('pdf-baby-name').value;
+                bannerPrev.innerHTML = ['pink', 'sage', 'blue']
+                    .map(t => `<span class="banner-fan-card">${posterPreviewHTML(t, nm)}</span>`).join('');
+            }
+            document.getElementById('btn-dismiss-banner').addEventListener('click', () => {
+                promoBanner.classList.add('hidden');
+            });
+            document.getElementById('btn-open-settings').addEventListener('click', () => openModal(modalSettings));
+            document.getElementById('btn-reset-settings').addEventListener('click', () => {
+                if (doReset()) closeModal(modalSettings);
+            });
+
+            document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => closeModal(e.target.closest('.fixed')));
+            });
+            window.addEventListener('click', (e) => {
+                if (e.target === modalPremium) closeModal(modalPremium);
+                if (e.target === modalSettings) closeModal(modalSettings);
+                if (e.target === modalCelebration) closeModal(modalCelebration);
+                if (e.target === modalNudge) closeModal(modalNudge);
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('search-overlay').classList.contains('hidden')) closeSearch();
+                    if (!faqOverlay.classList.contains('hidden')) closeFaq();
+                    [modalPremium, modalSettings, modalCelebration, modalNudge].forEach(m => {
+                        if (!m.classList.contains('hidden')) closeModal(m);
+                    });
                 }
             });
 
-            document.querySelectorAll('input[name="pdf-theme"]').forEach(radio => {
-                radio.addEventListener('change', updatePriceUI);
+            // Theme selection (delegated — the picker is re-rendered as keepsake mockups)
+            document.getElementById('theme-selector-container').addEventListener('change', (e) => {
+                if (e.target.name !== 'pdf-theme') return;
+                updatePriceUI();
+                document.querySelectorAll('#theme-selector-container .theme-card').forEach(card => {
+                    const on = card.getAttribute('data-theme-card') === e.target.value;
+                    card.classList.toggle('border-clay', on);
+                    card.classList.toggle('border-transparent', !on);
+                });
             });
+            // Keep all live previews' titles in sync with the typed name
+            document.getElementById('pdf-baby-name').addEventListener('input', updatePreviewTitles);
 
+            // SINGLE poster button: direct in-browser PDF download (no Lemon Squeezy, no fake payment)
             document.getElementById('btn-buy-poster').addEventListener('click', () => {
                 const babyNameVal = document.getElementById('pdf-baby-name').value.trim();
                 const selectedOrientation = document.querySelector('input[name="pdf-orientation"]:checked').value;
                 const selectedTheme = document.querySelector('input[name="pdf-theme"]:checked').value;
-                
                 try {
                     exportSinglePagePDF(babyNameVal, selectedOrientation, selectedTheme);
-                    const finalPaidAmt = selectedTheme === 'classic' ? '€3.99' : '€4.99';
-                    alert(`Success! Payment of ${finalPaidAmt} processed securely via Lemon Squeezy integration. Your print-ready vector poster has been generated.`);
-                    closeModal(document.getElementById('modal-premium'));
+                    closeModal(modalPremium);
                 } catch (pdfGenerationError) {
                     console.error("PDF generation issue:", pdfGenerationError);
                     alert("We had trouble drawing your poster. Make sure your browser settings allow automatic file downloads!");
                 }
             });
 
-            const modalPremium = document.getElementById('modal-premium');
-            const modalSettings = document.getElementById('modal-settings');
-            const modalCelebration = document.getElementById('modal-celebration');
-            
-            function openModal(modal) {
-                modal.classList.remove('hidden');
-                if(modal.id === 'modal-premium') updatePriceUI();
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    const interior = modal.querySelector('.transform');
-                    if(interior) interior.classList.remove('scale-95', 'scale-90');
-                }, 10);
-            }
-
-            function closeModal(modal) {
-                modal.classList.add('opacity-0');
-                const interior = modal.querySelector('.transform');
-                if(interior) interior.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 400);
-            }
-
-            document.getElementById('btn-open-monetization').addEventListener('click', () => openModal(modalPremium));
-            document.getElementById('btn-open-settings').addEventListener('click', () => openModal(modalSettings));
-            
-            document.querySelectorAll('.modal-close-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    closeModal(e.target.closest('.fixed'));
-                });
-            });
-            
-            window.addEventListener('click', (e) => {
-                if (e.target === modalPremium) closeModal(modalPremium);
-                if (e.target === modalSettings) closeModal(modalSettings);
-                if (e.target === modalCelebration) closeModal(modalCelebration);
-            });
-
+            // Memory code export / import
             document.getElementById('btn-export-data').addEventListener('click', () => {
                 const dataString = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
                 navigator.clipboard.writeText(dataString).then(() => {
                     alert("Your progress memory code has been copied to your clipboard! Paste it into a text message or note to save it safely.");
                 });
             });
-
             document.getElementById('btn-import-data').addEventListener('click', () => {
-                const payload = prompt("Paste your saved secret memory code back into this box to restore your list items instantly:");
-                if(payload) {
+                const payload = prompt("Paste your saved memory code here to restore your list instantly:");
+                if (payload) {
                     try {
                         const parsed = JSON.parse(decodeURIComponent(escape(atob(payload))));
-                        if(parsed && Array.isArray(parsed.dataset) && Array.isArray(parsed.tried)) {
+                        if (parsed && Array.isArray(parsed.dataset) && Array.isArray(parsed.tried)) {
                             state = parsed;
+                            if (!state.triggeredMilestones) state.triggeredMilestones = [];
                             saveStorage();
                             renderApp();
                             closeModal(modalSettings);
                             alert("Wonderful news! Your saved weaning progress has been perfectly restored.");
-                        } else {
-                            throw new Error();
-                        }
-                    } catch(e) {
-                        alert("Hmm, that code doesn't seem to match our system format. Double check that you copied the complete code!");
+                        } else { throw new Error(); }
+                    } catch (e) {
+                        alert("Hmm, that code doesn't seem to match our format. Double check that you copied the complete code!");
                     }
                 }
             });
