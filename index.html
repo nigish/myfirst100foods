@@ -38,7 +38,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
-    <script src="templates.js"></script>
+    <!-- templates.js (heavy theme art) is loaded lazily after the tracker is interactive -->
 
     <script>
         tailwind.config = {
@@ -1544,11 +1544,26 @@
 
             // Banner — dismissible for the current view only; reappears on every page refresh/visit
             const promoBanner = document.getElementById('promo-banner');
-            const bannerPrev = document.getElementById('banner-keepsake-preview');
-            if (bannerPrev) {
+            const renderBannerFan = () => {
+                const bannerPrev = document.getElementById('banner-keepsake-preview');
+                if (!bannerPrev) return;
                 const nm = document.getElementById('pdf-baby-name').value;
                 bannerPrev.innerHTML = ['pink', 'sage', 'blue']
                     .map(t => `<span class="banner-fan-card">${posterPreviewHTML(t, nm)}</span>`).join('');
+            };
+            // Load the heavy theme art lazily so it never blocks first paint / interactivity
+            if (window.THEME_TEMPLATES) {
+                renderBannerFan();
+            } else {
+                const ts = document.createElement('script');
+                ts.src = 'templates.js';
+                ts.async = true;
+                ts.onload = () => {
+                    renderBannerFan();
+                    const mp = document.getElementById('modal-premium');
+                    if (mp && !mp.classList.contains('hidden')) renderThemeSelector();
+                };
+                document.body.appendChild(ts);
             }
             document.getElementById('btn-dismiss-banner').addEventListener('click', () => {
                 promoBanner.classList.add('hidden');
