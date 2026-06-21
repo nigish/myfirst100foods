@@ -515,8 +515,6 @@
                             <span class="text-xs font-medium text-charcoal">Monkey & Banana (€4.99) 🐒</span>
                         </label>
                     </div>
-                    <p class="text-center text-[10px] uppercase tracking-wider text-gray-400 mt-3 mb-1.5">Your live preview</p>
-                    <div id="poster-hero-preview" class="mx-auto w-full max-w-[280px]"></div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Choose: keepsake or tracker</label>
@@ -1410,17 +1408,6 @@
                 </label>`).join('');
             const stepLabel = document.getElementById('theme-step-label');
             if (stepLabel) stepLabel.textContent = filled ? '2. Choose your keepsake design' : '2. Choose your tracker design';
-            renderHeroPreview();
-        }
-        // One large, readable preview of the selected design (so buyers can see the dated keepsake)
-        function renderHeroPreview() {
-            const el = document.getElementById('poster-hero-preview');
-            if (!el) return;
-            const name = document.getElementById('pdf-baby-name').value;
-            const theme = (document.querySelector('input[name="pdf-theme"]:checked') || {}).value || 'classic';
-            const orientation = (document.querySelector('input[name="pdf-orientation"]:checked') || {}).value || 'p';
-            const filled = ((document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled') === 'filled';
-            el.innerHTML = posterPreviewHTML(theme, name, orientation, filled);
         }
 
         // ---------- Keepsake buy-nudge (after a few foods tried) ----------
@@ -1634,7 +1621,6 @@
                     card.classList.toggle('border-clay', on);
                     card.classList.toggle('border-transparent', !on);
                 });
-                renderHeroPreview();
             });
             // Keep all live previews' titles in sync with the typed name
             document.getElementById('pdf-baby-name').addEventListener('input', updatePreviewTitles);
