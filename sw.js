@@ -1,5 +1,5 @@
 /* My First 100 Foods — service worker (installable PWA + offline) */
-const CACHE = 'mff-v1';
+const CACHE = 'mff-v2';
 const CORE = [
   '/', '/index.html', '/styles.css', '/templates.js',
   '/favicon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
