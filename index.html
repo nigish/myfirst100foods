@@ -199,6 +199,8 @@
         .poster-preview .pp-food { display: flex; align-items: center; gap: 0.4em; color: #2B2D42; white-space: nowrap; overflow: hidden; line-height: 1.28; font-size: 2px; font-size: 1.25cqh; }
         .poster-preview .pp-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; }
         .poster-preview .pp-box { flex: 0 0 auto; width: 0.95em; height: 0.95em; border: 1px solid rgba(43,45,66,.28); border-radius: 1px; }
+        .poster-preview .pp-box-on { background: #C66E50; border-color: #C66E50; }
+        .poster-preview .pp-food.pp-tried { font-weight: 600; }
 
         /* ---- Banner: three themed mini trackers fanned like a hand of cards ---- */
         .banner-fan { position: relative; width: 60px; height: 50px; }
@@ -485,6 +487,9 @@
                 </button>
                 <button class="flex-1 bg-charcoal hover:bg-ink text-white font-medium py-3 rounded-xl transition shadow-md modal-close-btn tracking-wide text-sm">Continue Journey</button>
             </div>
+            <button id="btn-celebrate-backup" class="mt-3 text-[11px] text-gray-400 hover:text-clay-deep transition inline-flex items-center gap-1">
+                💾 Save your progress code so you never lose your list
+            </button>
         </div>
     </div>
 
@@ -526,7 +531,20 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Select Layout</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Blank or completed keepsake?</label>
+                    <div class="grid grid-cols-1 gap-2" id="mode-selector-container">
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-mode" value="filled" checked class="accent-clay w-4 h-4 mt-0.5" />
+                            <div><span class="block text-xs font-medium text-charcoal">Completed keepsake ✨</span><span class="text-[10px] text-gray-400">Your ticked foods filled in, each with the date you first tried it</span></div>
+                        </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-mode" value="blank" class="accent-clay w-4 h-4 mt-0.5" />
+                            <div><span class="block text-xs font-medium text-charcoal">Blank checklist</span><span class="text-[10px] text-gray-400">An empty 100-foods list to print and tick off by hand</span></div>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">4. Select Layout</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-orientation" value="p" checked class="accent-clay w-4 h-4" />
@@ -725,7 +743,7 @@
         };
 
         const STORAGE_KEY = "babys_first_100_foods_custom_v16";
-        let state = { dataset: [], tried: [], triggeredMilestones: [] };
+        let state = { dataset: [], tried: [], triedDates: {}, triggeredMilestones: [] };
 
         // ---------- Storage ----------
         function initStorage() {
@@ -737,12 +755,14 @@
                         state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
                     }
                     if (!state.triggeredMilestones) state.triggeredMilestones = [];
+                    if (!state.triedDates) state.triedDates = {};
                 } catch (e) { resetToSystemDefault(); }
             } else { resetToSystemDefault(); }
         }
         function resetToSystemDefault() {
             state.dataset = JSON.parse(JSON.stringify(NATIVE_DEFAULT_DATASET));
             state.tried = [];
+            state.triedDates = {};
             state.triggeredMilestones = [];
             saveStorage();
         }
@@ -750,6 +770,15 @@
 
         function generateSlug(catId, itemName) {
             return `${catId}-${itemName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+        }
+
+        // Short, human date for the keepsake, e.g. "12 Jun ’26"
+        function formatTriedDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (isNaN(d)) return '';
+            const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+            return `${d.getDate()} ${mon} ’${String(d.getFullYear()).slice(2)}`;
         }
 
         // Pick the theme art: a landscape-specific image if one exists, otherwise the default (portrait) one
@@ -872,8 +901,9 @@
             }, 10);
         }
 
-        // ---------- PDF poster export (unchanged logic) ----------
-        function exportSinglePagePDF(babyName, orientation, chosenTheme) {
+        // ---------- PDF poster export ----------
+        // filled = true → "Completed keepsake": tick the foods already tried and print their dates
+        function exportSinglePagePDF(babyName, orientation, chosenTheme, filled) {
             const { jsPDF } = window.jspdf;
             const isLandscape = orientation === 'l';
             const doc = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
@@ -925,7 +955,8 @@
                 });
             });
             const boxSize = 2.0;
-            const maximumAllowedTextWidth = columnWidth - boxSize - 4.5;
+            const dateReserve = filled ? 11 : 0; // room to print the date to the right of each ticked box
+            const maximumAllowedTextWidth = columnWidth - boxSize - 4.5 - dateReserve;
             if (globalMaxTextWidth > maximumAllowedTextWidth) globalMaxTextWidth = maximumAllowedTextWidth;
 
             state.dataset.forEach((category) => {
@@ -955,7 +986,21 @@
                     const boxY = yOffset - boxSize + 0.2;
                     doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
                     doc.setLineWidth(0.15);
-                    doc.rect(boxX, boxY, boxSize, boxSize, 'S');
+                    const isTried = filled && state.tried.includes(generateSlug(category.id, item));
+                    if (isTried) {
+                        // ticked: fill the box and print the date next to it
+                        doc.setFillColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
+                        doc.rect(boxX, boxY, boxSize, boxSize, 'FD');
+                        const dStr = formatTriedDate(state.triedDates && state.triedDates[generateSlug(category.id, item)]);
+                        if (dStr) {
+                            doc.setFontSize(itemFontSize - 2.6);
+                            doc.setTextColor(140, 140, 140);
+                            doc.text(dStr, boxX + boxSize + 1.1, yOffset);
+                            doc.setFontSize(itemFontSize);
+                        }
+                    } else {
+                        doc.rect(boxX, boxY, boxSize, boxSize, 'S');
+                    }
                     currentColIdx++;
                     xPos += columnWidth;
                     if (currentColIdx >= totalCols) { currentColIdx = 0; xPos = leftMargin; yOffset += rowHeight; }
@@ -1266,10 +1311,13 @@
                 const clickedWrapper = toggleBtn.closest('.food-card-wrapper');
                 const index = state.tried.indexOf(foodId);
                 const nowTried = index === -1;
+                if (!state.triedDates) state.triedDates = {};
                 if (index > -1) {
                     state.tried.splice(index, 1);
+                    delete state.triedDates[foodId];
                 } else {
                     state.tried.push(foodId);
+                    state.triedDates[foodId] = new Date().toISOString().slice(0, 10);
                     if (!trackingStarted) { trackingStarted = true; track('started_tracking'); }
                     const currentStats = calculateStats();
                     evaluateMilestoneTriggers(currentStats.percentage);
@@ -1327,7 +1375,7 @@
 
         // ---------- Live keepsake preview (HTML mock overlaid on the theme art) ----------
         function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-        function posterPreviewHTML(theme, name, orientation) {
+        function posterPreviewHTML(theme, name, orientation, filled) {
             const landscape = orientation === 'l';
             const tpl = themeImage(theme, landscape);
             const display = (name && name.trim()) ? name.trim() : 'Nadin';
@@ -1335,9 +1383,10 @@
             let foods = '';
             state.dataset.forEach(cat => {
                 foods += `<div class="pp-cat">${escapeHtml(cat.name)}</div><div class="pp-cat-grid">`;
-                // Always the blank default checklist — the product is a clean printable tracker, not the user's tracked data
+                // Blank mode = clean printable checklist; filled (keepsake) = the user's actually-tried foods ticked
                 cat.items.forEach(it => {
-                    foods += `<div class="pp-food"><span class="pp-name">${escapeHtml(it)}</span><span class="pp-box"></span></div>`;
+                    const tried = filled && state.tried.includes(generateSlug(cat.id, it));
+                    foods += `<div class="pp-food${tried ? ' pp-tried' : ''}"><span class="pp-name">${escapeHtml(it)}</span><span class="pp-box${tried ? ' pp-box-on' : ''}"></span></div>`;
                 });
                 foods += `</div>`;
             });
@@ -1355,6 +1404,7 @@
             const name = document.getElementById('pdf-baby-name').value;
             const selected = (document.querySelector('input[name="pdf-theme"]:checked') || {}).value || 'classic';
             const orientation = (document.querySelector('input[name="pdf-orientation"]:checked') || {}).value || 'p';
+            const filled = ((document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled') === 'filled';
             const themes = [
                 { v: 'classic', label: 'Minimalist Classic' },
                 { v: 'pink', label: 'Ribbon & Strawberries 🍓' },
@@ -1364,7 +1414,7 @@
             container.innerHTML = themes.map(t => `
                 <label class="theme-card cursor-pointer block rounded-2xl border-2 ${t.v === selected ? 'border-clay' : 'border-transparent'} hover:border-clay/40 transition-all p-1.5 bg-gray-50" data-theme-card="${t.v}">
                     <input type="radio" name="pdf-theme" value="${t.v}" ${t.v === selected ? 'checked' : ''} class="sr-only" />
-                    ${posterPreviewHTML(t.v, name, orientation)}
+                    ${posterPreviewHTML(t.v, name, orientation, filled)}
                     <span class="mt-1.5 block text-center text-[11px] font-medium text-charcoal">${t.label}</span>
                 </label>`).join('');
         }
@@ -1585,6 +1635,7 @@
             document.getElementById('pdf-baby-name').addEventListener('input', updatePreviewTitles);
             // Orientation change → re-render previews so they flip portrait ↔ landscape (3 vs 4 columns), like the PDF
             document.querySelectorAll('input[name="pdf-orientation"]').forEach(r => r.addEventListener('change', renderThemeSelector));
+            document.querySelectorAll('input[name="pdf-mode"]').forEach(r => r.addEventListener('change', renderThemeSelector));
 
             // SINGLE poster button: direct in-browser PDF download (no Lemon Squeezy, no fake payment)
             // ===== Lemon Squeezy overlay checkout =====
@@ -1601,7 +1652,7 @@
             function deliverTracker(order) {
                 if (!order) return;
                 try {
-                    exportSinglePagePDF(order.name, order.orientation, order.theme);
+                    exportSinglePagePDF(order.name, order.orientation, order.theme, order.filled);
                 } catch (err) {
                     console.error('PDF generation issue:', err);
                     alert('We had trouble drawing your tracker. Make sure your browser allows downloads, then try again.');
@@ -1615,7 +1666,7 @@
                     eventHandler: (event) => {
                         if (event && event.event === 'Checkout.Success') {
                             const order = pendingOrder; pendingOrder = null;
-                            track('purchase_success', { theme: order ? order.theme : 'unknown' });
+                            track('purchase_success', { theme: order ? order.theme : 'unknown', mode: order && order.filled ? 'keepsake' : 'blank' });
                             try { window.LemonSqueezy.Url.Close(); } catch (e) {}
                             closeModal(modalPremium);
                             deliverTracker(order);
@@ -1625,10 +1676,12 @@
             }
 
             document.getElementById('btn-buy-poster').addEventListener('click', () => {
+                const mode = (document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled';
                 const order = {
                     name: document.getElementById('pdf-baby-name').value.trim(),
                     orientation: document.querySelector('input[name="pdf-orientation"]:checked').value,
-                    theme: document.querySelector('input[name="pdf-theme"]:checked').value
+                    theme: document.querySelector('input[name="pdf-theme"]:checked').value,
+                    filled: mode === 'filled'
                 };
 
                 // FREE TEST MODE for any design without a checkout URL yet → just download
@@ -1641,7 +1694,7 @@
 
                 // PAID — open the Lemon Squeezy payment overlay; PDF is delivered on Checkout.Success
                 pendingOrder = order;
-                track('checkout_opened', { theme: order.theme });
+                track('checkout_opened', { theme: order.theme, mode: order.filled ? 'keepsake' : 'blank' });
                 const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1';
                 if (window.LemonSqueezy && window.LemonSqueezy.Url) {
                     window.LemonSqueezy.Url.Open(url);
@@ -1651,13 +1704,16 @@
             });
 
             // Memory code export / import
-            document.getElementById('btn-export-data').addEventListener('click', () => {
+            const exportMemoryCode = () => {
                 const dataString = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
                 navigator.clipboard.writeText(dataString).then(() => {
                     track('memory_code_exported');
-                    alert("Your progress memory code has been copied to your clipboard! Paste it into a text message or note to save it safely.");
+                    alert("Your progress memory code has been copied to your clipboard! Paste it into a text message or note to keep it safe — you can load it on any device.");
                 });
-            });
+            };
+            document.getElementById('btn-export-data').addEventListener('click', exportMemoryCode);
+            const celebrateBackup = document.getElementById('btn-celebrate-backup');
+            if (celebrateBackup) celebrateBackup.addEventListener('click', exportMemoryCode);
             document.getElementById('btn-import-data').addEventListener('click', () => {
                 const payload = prompt("Paste your saved memory code here to restore your list instantly:");
                 if (payload) {
