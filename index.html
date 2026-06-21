@@ -522,12 +522,8 @@
                             <span class="text-xs font-medium text-charcoal">Ribbon & Strawberries (€4.99) 🍓</span>
                         </label>
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
-                            <input type="radio" name="pdf-theme" value="sage" class="accent-clay w-4 h-4" />
-                            <span class="text-xs font-medium text-charcoal">Tomato & Car (€4.99) 🚗</span>
-                        </label>
-                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
-                            <input type="radio" name="pdf-theme" value="blue" class="accent-clay w-4 h-4" />
-                            <span class="text-xs font-medium text-charcoal">Monkey & Banana (€4.99) 🐒</span>
+                            <input type="radio" name="pdf-theme" value="boho" class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Boho Neutral (€4.99) ☀️</span>
                         </label>
                     </div>
                 </div>
@@ -929,8 +925,6 @@
             const themes = {
                 classic: { bg: null, textTitle: [43, 45, 66], textCat: [226, 149, 120], lineCat: [226, 149, 120], textItem: [43, 45, 66], border1: [226, 149, 120] },
                 pink: { bg: [255, 245, 247], textTitle: [74, 21, 37], textCat: [194, 24, 91], lineCat: [194, 24, 91], textItem: [74, 21, 37], border1: [244, 143, 177] },
-                sage: { bg: [244, 249, 246], textTitle: [45, 90, 86], textCat: [45, 90, 86], lineCat: [45, 90, 86], textItem: [28, 59, 56], border1: [131, 197, 190] },
-                blue: { bg: [244, 249, 252], textTitle: [21, 101, 192], textCat: [21, 101, 192], lineCat: [21, 101, 192], textItem: [13, 71, 161], border1: [144, 202, 249] },
                 boho: { bg: [250, 246, 239], textTitle: [43, 45, 66], textCat: [198, 110, 80], lineCat: [198, 110, 80], textItem: [43, 45, 66], border1: [226, 149, 120] }
             };
             const cfg = themes[chosenTheme] || themes.classic;
@@ -1436,8 +1430,6 @@
             const themes = [
                 { v: 'classic', label: 'Minimalist Classic' },
                 { v: 'pink', label: 'Ribbon & Strawberries 🍓' },
-                { v: 'sage', label: 'Tomato & Car 🚗' },
-                { v: 'blue', label: 'Monkey & Banana 🐒' },
                 { v: 'boho', label: 'Boho Neutral ☀️' }
             ];
             container.innerHTML = themes.map(t => `
@@ -1459,8 +1451,8 @@
                 const name = (document.getElementById('pdf-baby-name').value || '').trim() || 'Nadin';
                 const order = [
                     { v: 'pink', label: 'Ribbon & Strawberries' },
-                    { v: 'sage', label: 'Tomato & Car' },
-                    { v: 'blue', label: 'Monkey & Banana' }
+                    { v: 'boho', label: 'Boho Neutral' },
+                    { v: 'classic', label: 'Minimalist' }
                 ];
                 holder.innerHTML = order.map(t => `
                     <figure class="m-0">
@@ -1610,7 +1602,7 @@
                 const bannerPrev = document.getElementById('banner-keepsake-preview');
                 if (!bannerPrev) return;
                 const nm = document.getElementById('pdf-baby-name').value;
-                bannerPrev.innerHTML = ['pink', 'sage', 'blue']
+                bannerPrev.innerHTML = ['pink', 'boho', 'classic']
                     .map(t => `<span class="banner-fan-card">${previewHolder(t, nm, 'p', false)}</span>`).join('');
                 hydratePreviews(bannerPrev, 'p', false);
             };
@@ -1668,8 +1660,6 @@
             const LS_CHECKOUT_URLS = {
                 classic: '',
                 pink: '',
-                sage: '',
-                blue: '',
                 boho: ''
             };
             let pendingOrder = null;
