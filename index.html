@@ -213,7 +213,7 @@
         .poster-preview { container-type: size; position: relative; width: 100%; aspect-ratio: 1 / 1.414; background-color: #FFF8F2; background-size: 100% 100%; background-position: center; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 18px rgba(43,45,66,.16); }
         .poster-preview.landscape { aspect-ratio: 1.414 / 1; }
         .poster-preview.landscape .pp-cat-grid { grid-template-columns: repeat(4, 1fr); }
-        .poster-preview .pp-inner { position: absolute; inset: 11% 8.5% 6%; display: flex; flex-direction: column; overflow: hidden; }
+        .poster-preview .pp-inner { position: absolute; inset: 12% 10.5% 7%; display: flex; flex-direction: column; overflow: hidden; text-align: left; }
         .poster-preview .pp-title { text-align: center; font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 600; line-height: 1.05; color: #2B2D42; margin-bottom: 1.6cqh; font-size: 5px; font-size: 3cqh; }
         .poster-preview .pp-cat { display: inline-block; align-self: flex-start; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #C66E50; border-bottom: 1px solid currentColor; margin: 1cqh 0 0.5cqh; padding-bottom: 0.2cqh; font-size: 3px; font-size: 1.8cqh; }
         .poster-preview .pp-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 5%; }
@@ -903,9 +903,9 @@
 
             let totalCols, leftMargin, rightMargin, itemFontSize, categoryFontSize, titleFontSize, rowHeight, lineGapAfterSection, yOffset;
             if (isLandscape) {
-                totalCols = 4; leftMargin = 26; rightMargin = 26; itemFontSize = 7.5; categoryFontSize = 10.0; titleFontSize = 18; rowHeight = 4.0; lineGapAfterSection = 1.5; yOffset = 26;
+                totalCols = 4; leftMargin = 32; rightMargin = 32; itemFontSize = 7.5; categoryFontSize = 10.0; titleFontSize = 18; rowHeight = 4.0; lineGapAfterSection = 1.5; yOffset = 30;
             } else {
-                totalCols = 3; leftMargin = 22; rightMargin = 22; itemFontSize = 8.0; categoryFontSize = 11.0; titleFontSize = 22; rowHeight = 5.0; lineGapAfterSection = 3.0; yOffset = 36;
+                totalCols = 3; leftMargin = 28; rightMargin = 28; itemFontSize = 8.0; categoryFontSize = 11.0; titleFontSize = 22; rowHeight = 5.0; lineGapAfterSection = 3.0; yOffset = 40;
             }
             const availableWidth = pageWidth - leftMargin - rightMargin;
             const columnWidth = availableWidth / totalCols;
