@@ -496,7 +496,7 @@
                     <input type="text" id="pdf-baby-name" placeholder="e.g. Oliver, Sophia" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sage focus:bg-white transition-all text-charcoal" />
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">2. Choose your tracker design</label>
+                    <label id="theme-step-label" class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">2. Choose your keepsake design</label>
                     <div class="grid grid-cols-2 gap-2" id="theme-selector-container">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-theme" value="classic" checked class="accent-clay w-4 h-4" />
@@ -515,9 +515,11 @@
                             <span class="text-xs font-medium text-charcoal">Monkey & Banana (€4.99) 🐒</span>
                         </label>
                     </div>
+                    <p class="text-center text-[10px] uppercase tracking-wider text-gray-400 mt-3 mb-1.5">Your live preview</p>
+                    <div id="poster-hero-preview" class="mx-auto w-full max-w-[280px]"></div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Blank or completed keepsake?</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Choose: keepsake or tracker</label>
                     <div class="grid grid-cols-1 gap-2" id="mode-selector-container">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-mode" value="filled" checked class="accent-clay w-4 h-4 mt-0.5" />
@@ -525,7 +527,7 @@
                         </label>
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-mode" value="blank" class="accent-clay w-4 h-4 mt-0.5" />
-                            <div><span class="block text-xs font-medium text-charcoal">Blank checklist</span><span class="text-[10px] text-gray-400">An empty 100-foods list to print and tick off by hand</span></div>
+                            <div><span class="block text-xs font-medium text-charcoal">Personalized tracker</span><span class="text-[10px] text-gray-400">A clean 100-foods list with your baby's name — print and tick off by hand</span></div>
                         </label>
                     </div>
                 </div>
@@ -1406,6 +1408,19 @@
                     ${posterPreviewHTML(t.v, name, orientation, filled)}
                     <span class="mt-1.5 block text-center text-[11px] font-medium text-charcoal">${t.label}</span>
                 </label>`).join('');
+            const stepLabel = document.getElementById('theme-step-label');
+            if (stepLabel) stepLabel.textContent = filled ? '2. Choose your keepsake design' : '2. Choose your tracker design';
+            renderHeroPreview();
+        }
+        // One large, readable preview of the selected design (so buyers can see the dated keepsake)
+        function renderHeroPreview() {
+            const el = document.getElementById('poster-hero-preview');
+            if (!el) return;
+            const name = document.getElementById('pdf-baby-name').value;
+            const theme = (document.querySelector('input[name="pdf-theme"]:checked') || {}).value || 'classic';
+            const orientation = (document.querySelector('input[name="pdf-orientation"]:checked') || {}).value || 'p';
+            const filled = ((document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled') === 'filled';
+            el.innerHTML = posterPreviewHTML(theme, name, orientation, filled);
         }
 
         // ---------- Keepsake buy-nudge (after a few foods tried) ----------
@@ -1619,6 +1634,7 @@
                     card.classList.toggle('border-clay', on);
                     card.classList.toggle('border-transparent', !on);
                 });
+                renderHeroPreview();
             });
             // Keep all live previews' titles in sync with the typed name
             document.getElementById('pdf-baby-name').addEventListener('input', updatePreviewTitles);
