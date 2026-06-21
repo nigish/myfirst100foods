@@ -171,22 +171,7 @@
         .scroll-cue { animation: cue-bob 2.2s ease-in-out infinite; }
         @keyframes cue-bob { 0%,100%{transform:translateY(0);opacity:.6;} 50%{transform:translateY(7px);opacity:1;} }
 
-        /* Tick feedback — applied ONLY to the single food just checked */
-        @keyframes tick-pop {
-            0%   { transform: scale(1); }
-            38%  { transform: scale(1.14); }
-            100% { transform: scale(1); }
-        }
-        .food-pill.just-ticked { animation: tick-pop .42s cubic-bezier(.34, 1.56, .64, 1); }
-        @keyframes check-burst {
-            0%   { transform: scale(.4); opacity: 1; }
-            70%  { opacity: .35; }
-            100% { transform: scale(2.1); opacity: 0; }
-        }
-        .food-pill.just-ticked .tick-circle::after {
-            content: ""; position: absolute; inset: -3px; border-radius: 9999px;
-            border: 2px solid #83C5BE; animation: check-burst .55s ease-out forwards;
-        }
+        /* Tick feedback: color change only — no scale/burst animation (it caused a right-edge page shake) */
 
         /* ---- Live keepsake preview — mirrors the PDF layout (title, per-category 3-col grid, box to the RIGHT) ---- */
         .poster-preview { container-type: size; position: relative; width: 100%; aspect-ratio: 1 / 1.414; background-color: #FFF8F2; background-size: 100% 100%; background-position: center; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 18px rgba(43,45,66,.16); }
@@ -993,9 +978,11 @@
                         doc.rect(boxX, boxY, boxSize, boxSize, 'FD');
                         const dStr = formatTriedDate(state.triedDates && state.triedDates[generateSlug(category.id, item)]);
                         if (dStr) {
-                            doc.setFontSize(itemFontSize - 2.6);
-                            doc.setTextColor(140, 140, 140);
-                            doc.text(dStr, boxX + boxSize + 1.1, yOffset);
+                            doc.setFont('helvetica', 'italic');
+                            doc.setFontSize(itemFontSize - 1.6);
+                            doc.setTextColor(cfg.textCat[0], cfg.textCat[1], cfg.textCat[2]);
+                            doc.text(dStr, boxX + boxSize + 1.2, yOffset);
+                            doc.setFont('helvetica', 'normal');
                             doc.setFontSize(itemFontSize);
                         }
                     } else {
@@ -1639,12 +1626,15 @@
 
             // SINGLE poster button: direct in-browser PDF download (no Lemon Squeezy, no fake payment)
             // ===== Lemon Squeezy overlay checkout =====
-            // Per-design Lemon Squeezy checkout URLs. Any theme left '' stays in FREE TEST MODE (downloads, no payment).
+            // FREE DOWNLOAD MODE for now: all '' → clicking just downloads the PDF (no payment).
+            // To turn payments back on, restore the real URLs below:
+            //   classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e'
+            //   pink/sage/blue: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25'
             const LS_CHECKOUT_URLS = {
-                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e',
-                pink: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
-                sage: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
-                blue: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25'
+                classic: '',
+                pink: '',
+                sage: '',
+                blue: ''
             };
             let pendingOrder = null;
 
