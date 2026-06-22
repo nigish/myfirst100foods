@@ -784,12 +784,14 @@
             return `${d.getDate()} ${mon} ’${String(d.getFullYear()).slice(2)}`;
         }
 
-        // Pick the theme art: a landscape-specific image if one exists, otherwise the default (portrait) one
+        // Pick the theme art for the exact orientation. Never cross-fall-back (a portrait image
+        // stretched onto a landscape page, or vice-versa, looks distorted) — return null instead,
+        // which makes the PDF/preview use the clean cream/border fallback.
         function themeImage(theme, landscape) {
-            if (landscape && window.THEME_TEMPLATES_LANDSCAPE && window.THEME_TEMPLATES_LANDSCAPE[theme]) {
-                return window.THEME_TEMPLATES_LANDSCAPE[theme];
+            if (landscape) {
+                return (window.THEME_TEMPLATES_LANDSCAPE && window.THEME_TEMPLATES_LANDSCAPE[theme]) || null;
             }
-            return (window.THEME_TEMPLATES && window.THEME_TEMPLATES[theme]) ? window.THEME_TEMPLATES[theme] : null;
+            return (window.THEME_TEMPLATES && window.THEME_TEMPLATES[theme]) || null;
         }
 
         // Analytics — single helper. Sends to Google Analytics only after cookie consent (gtag is undefined until then).
@@ -909,9 +911,10 @@
         function exportSinglePagePDF(babyName, orientation, chosenTheme, filled) {
             const { jsPDF } = window.jspdf;
             const isLandscape = orientation === 'l';
-            const doc = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
             const pageWidth = isLandscape ? 297 : 210;
             const pageHeight = isLandscape ? 210 : 297;
+            // Pass explicit [width,height] so the landscape page can't fall back to portrait
+            const doc = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'mm', format: [pageWidth, pageHeight] });
 
             let totalCols, leftMargin, rightMargin, itemFontSize, categoryFontSize, titleFontSize, rowHeight, lineGapAfterSection, yOffset;
             if (isLandscape) {
