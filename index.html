@@ -15,6 +15,8 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 
     <!-- Installable app (PWA) -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -31,14 +33,16 @@
     <meta property="og:title" content="My First 100 Foods — Free 100 First Foods Tracker">
     <meta property="og:description" content="Track your baby's first 100 foods, free. A fun, interactive baby-led weaning checklist — tick off every first taste and make a personalized printable keepsake.">
     <meta property="og:url" content="https://myfirst100foods.com/">
-    <meta property="og:image" content="https://myfirst100foods.com/og-image.png">
-    <meta property="og:image:alt" content="My First 100 Foods — the first 100 foods tracker">
+    <meta property="og:image" content="https://myfirst100foods.com/og-cover.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="My First 100 Foods — the free first-100-foods tracker">
 
     <!-- Twitter / X card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="My First 100 Foods — Free 100 First Foods Tracker">
     <meta name="twitter:description" content="Track your baby's first 100 foods, free. A fun, interactive baby-led weaning checklist — tick off every first taste and make a personalized printable keepsake.">
-    <meta name="twitter:image" content="https://myfirst100foods.com/og-image.png">
+    <meta name="twitter:image" content="https://myfirst100foods.com/og-cover.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,13 +222,7 @@
             0%, 100% { box-shadow: 0 6px 18px -4px rgba(226,149,120,.55), 0 0 0 0 rgba(226,149,120,0); }
             50%      { box-shadow: 0 8px 26px -2px rgba(226,149,120,.75), 0 0 22px 2px rgba(226,149,120,.35); }
         }
-        .keepsake-cta-glow { position: relative; overflow: hidden; animation: keepsake-glow 2.8s ease-in-out infinite; }
-        .keepsake-cta-glow::after {
-            content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
-            background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
-            transform: skewX(-18deg); animation: keepsake-sheen 4.6s ease-in-out infinite;
-        }
-        @keyframes keepsake-sheen { 0%, 62% { left: -60%; } 80%, 100% { left: 130%; } }
+        .keepsake-cta-glow { animation: keepsake-glow 2.8s ease-in-out infinite; }
 
         @media (prefers-reduced-motion: reduce) {
             #stage { scroll-snap-type: none; }
@@ -233,7 +231,6 @@
             .food-pill.just-ticked { animation: none; }
             .food-pill.just-ticked .tick-circle::after { animation: none; content: none; }
             .keepsake-cta-glow { animation: none; }
-            .keepsake-cta-glow::after { display: none; }
         }
     </style>
     <!-- Structured data for search engines -->
@@ -531,12 +528,12 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5">3. Choose: keepsake or tracker</label>
                     <div class="grid grid-cols-1 gap-2" id="mode-selector-container">
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
-                            <input type="radio" name="pdf-mode" value="filled" checked class="accent-clay w-4 h-4 mt-0.5" />
-                            <div><span class="block text-xs font-medium text-charcoal">Completed keepsake ✨</span><span class="text-[10px] text-gray-400">Your ticked foods filled in, each with the date you first tried it</span></div>
+                            <input type="radio" name="pdf-mode" value="blank" checked class="accent-clay w-4 h-4 mt-0.5" />
+                            <div><span class="block text-xs font-medium text-charcoal">Personalized tracker</span><span class="text-[10px] text-gray-400">A clean 100-foods list with your baby's name — print and tick off by hand</span></div>
                         </label>
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
-                            <input type="radio" name="pdf-mode" value="blank" class="accent-clay w-4 h-4 mt-0.5" />
-                            <div><span class="block text-xs font-medium text-charcoal">Personalized tracker</span><span class="text-[10px] text-gray-400">A clean 100-foods list with your baby's name — print and tick off by hand</span></div>
+                            <input type="radio" name="pdf-mode" value="filled" class="accent-clay w-4 h-4 mt-0.5" />
+                            <div><span class="block text-xs font-medium text-charcoal">Completed keepsake ✨</span><span class="text-[10px] text-gray-400">Your ticked foods filled in, each with the date you first tried it</span></div>
                         </label>
                     </div>
                 </div>
@@ -549,7 +546,7 @@
                         </label>
                         <label class="cursor-pointer border border-gray-200 rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50/50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
                             <input type="radio" name="pdf-orientation" value="l" class="accent-clay w-4 h-4" />
-                            <div><span class="block text-xs font-medium text-charcoal">Landscape Layout</span><span class="text-[10px] text-gray-400">Horizontal print layout</span></div>
+                            <div><span class="block text-xs font-medium text-charcoal">Landscape Layout</span><span class="text-[10px] text-gray-400">Horizontal print (Standard A4)</span></div>
                         </label>
                     </div>
                 </div>
@@ -590,6 +587,7 @@
                     <p class="text-xs text-gray-500 mb-3">Install the app for one-tap access — opens like an app, no browser bar, works offline.</p>
                     <button id="btn-install-app" class="w-full bg-clay hover:bg-clay-deep text-white text-xs font-semibold py-2.5 rounded-xl transition hidden">Install app</button>
                     <p id="ios-install-hint" class="text-[11px] text-gray-500 leading-relaxed hidden">On iPhone/iPad: tap the <strong>Share</strong> button, then <strong>“Add to Home Screen.”</strong></p>
+                    <p id="generic-install-hint" class="text-[11px] text-gray-500 leading-relaxed hidden">In your browser menu, choose <strong>“Install app”</strong> or <strong>“Add to Home screen.”</strong></p>
                 </div>
                 <button id="btn-reset-settings" class="w-full bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
@@ -937,9 +935,17 @@
                 doc.addImage(templateAsset, 'PNG', 0, 0, pageWidth, pageHeight);
             } else {
                 if (cfg.bg) { doc.setFillColor(cfg.bg[0], cfg.bg[1], cfg.bg[2]); doc.rect(0, 0, pageWidth, pageHeight, 'F'); }
-                doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
-                doc.setLineWidth(0.5);
-                doc.rect(6, 6, pageWidth - 12, pageHeight - 12);
+                // Decorative double-line frame for the Minimalist theme (clay outer, sage inner, corner dots)
+                const m1 = 9, m2 = 12.5;
+                doc.setDrawColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]); // clay
+                doc.setLineWidth(0.7);
+                doc.rect(m1, m1, pageWidth - 2 * m1, pageHeight - 2 * m1);
+                doc.setDrawColor(131, 197, 190); // sage
+                doc.setLineWidth(0.3);
+                doc.rect(m2, m2, pageWidth - 2 * m2, pageHeight - 2 * m2);
+                doc.setFillColor(cfg.border1[0], cfg.border1[1], cfg.border1[2]);
+                [[m1, m1], [pageWidth - m1, m1], [m1, pageHeight - m1], [pageWidth - m1, pageHeight - m1]]
+                    .forEach(c => doc.circle(c[0], c[1], 1.1, 'F'));
             }
 
             const stylizedTitle = babyName ? `${babyName}'s First 100 Foods` : "First 100 Foods";
@@ -1429,7 +1435,7 @@
             const name = document.getElementById('pdf-baby-name').value;
             const selected = (document.querySelector('input[name="pdf-theme"]:checked') || {}).value || 'classic';
             const orientation = (document.querySelector('input[name="pdf-orientation"]:checked') || {}).value || 'p';
-            const filled = ((document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled') === 'filled';
+            const filled = ((document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'blank') === 'filled';
             const themes = [
                 { v: 'classic', label: 'Minimalist Classic' },
                 { v: 'pink', label: 'Ribbon & Strawberries 🍓' },
@@ -1696,7 +1702,7 @@
             }
 
             document.getElementById('btn-buy-poster').addEventListener('click', () => {
-                const mode = (document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'filled';
+                const mode = (document.querySelector('input[name="pdf-mode"]:checked') || {}).value || 'blank';
                 const order = {
                     name: document.getElementById('pdf-baby-name').value.trim(),
                     orientation: document.querySelector('input[name="pdf-orientation"]:checked').value,
@@ -1769,20 +1775,31 @@
         }
         (function () {
             var section = document.getElementById('install-section');
-            var btn = document.getElementById('btn-install-app');     // button inside Settings
-            var hudBtn = document.getElementById('btn-install-hud');   // button in the top bar
+            var btn = document.getElementById('btn-install-app');         // one-click button inside Settings
+            var hudBtn = document.getElementById('btn-install-hud');       // one-click button in the top bar
             var iosHint = document.getElementById('ios-install-hint');
+            var genericHint = document.getElementById('generic-install-hint');
             if (!section) return;
             var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-            if (standalone) return; // already installed → no need to prompt
+            if (standalone) return; // running as the installed app — nothing to offer
 
-            function showInstall() {
-                section.classList.remove('hidden');
+            var ua = navigator.userAgent;
+            var isIOS = /iphone|ipad|ipod/i.test(ua);
+            var isSafari = /^((?!chrome|crios|fxios|android).)*safari/i.test(ua);
+
+            // The Settings section is ALWAYS shown (so there's always a way to install);
+            // the one-tap buttons appear only when the browser offers a native prompt.
+            section.classList.remove('hidden');
+            if (isIOS && isSafari) iosHint.classList.remove('hidden');
+            else genericHint.classList.remove('hidden');
+
+            function enableOneTap() {
                 btn.classList.remove('hidden');
                 if (hudBtn) hudBtn.style.display = 'flex';
+                if (genericHint) genericHint.classList.add('hidden'); // prefer the button over the text hint
             }
-            function hideInstall() {
-                section.classList.add('hidden');
+            function disableOneTap() {
+                btn.classList.add('hidden');
                 if (hudBtn) hudBtn.style.display = 'none';
             }
             async function doInstall() {
@@ -1790,21 +1807,15 @@
                 window.__bip.prompt();
                 try { await window.__bip.userChoice; } catch (_) {}
                 window.__bip = null;
-                hideInstall();
+                disableOneTap();
                 if (typeof track === 'function') track('app_install_prompted');
             }
 
-            if (window.__bip) showInstall();
-            window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__bip = e; showInstall(); });
+            if (window.__bip) enableOneTap();
+            window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__bip = e; enableOneTap(); });
             btn.addEventListener('click', doInstall);
             if (hudBtn) hudBtn.addEventListener('click', doInstall);
-            window.addEventListener('appinstalled', hideInstall);
-
-            // iOS Safari has no install prompt → show the manual "Add to Home Screen" hint in Settings
-            var ua = navigator.userAgent;
-            var isIOS = /iphone|ipad|ipod/i.test(ua);
-            var isSafari = /^((?!chrome|crios|fxios|android).)*safari/i.test(ua);
-            if (isIOS && isSafari) { section.classList.remove('hidden'); iosHint.classList.remove('hidden'); }
+            window.addEventListener('appinstalled', function () { section.classList.add('hidden'); disableOneTap(); });
         })();
     </script>
 </body>

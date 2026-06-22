@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="1200" height="1200">
+  <rect width="1200" height="1200" fill="#FAF6EF"/>
+  <!-- card frame (sits inside the center 1200x630 crop band: y 285..915) -->
+  <rect x="22" y="307" width="1156" height="586" rx="28" fill="none" stroke="#E29578" stroke-width="3"/>
+  <rect x="33" y="318" width="1134" height="564" rx="20" fill="none" stroke="#83C5BE" stroke-width="1.5"/>
+
+  <!-- 100 badge -->
+  <circle cx="600" cy="455" r="78" fill="none" stroke="#E29578" stroke-width="7"/>
+  <circle cx="600" cy="455" r="63" fill="none" stroke="#83C5BE" stroke-width="3.5"/>
+  <text x="600" y="483" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="70" fill="#C66E50">100</text>
+
+  <!-- wordmark -->
+  <text x="600" y="665" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="78" fill="#2B2D42">My First <tspan fill="#C66E50">100</tspan> Foods</text>
+
+  <!-- tagline -->
+  <text x="600" y="733" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="30" fill="#6B6B76">Track every one of your baby's first tastes — a free, beautiful tracker</text>
+
+  <!-- url -->
+  <text x="600" y="838" text-anchor="middle" font-family="-apple-system, Helvetica, Arial, sans-serif" font-weight="600" font-size="27" letter-spacing="1" fill="#C66E50">myfirst100foods.com</text>
+</svg>
