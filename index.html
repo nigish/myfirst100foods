@@ -522,6 +522,10 @@
                             <input type="radio" name="pdf-theme" value="boho" class="accent-clay w-4 h-4" />
                             <span class="text-xs font-medium text-charcoal">Boho Neutral (€4.99) ☀️</span>
                         </label>
+                        <label class="cursor-pointer border border-gray-200 rounded-xl p-2.5 flex items-center gap-2.5 hover:bg-gray-50 has-[:checked]:border-clay has-[:checked]:bg-oat/20 transition-all">
+                            <input type="radio" name="pdf-theme" value="monkey" class="accent-clay w-4 h-4" />
+                            <span class="text-xs font-medium text-charcoal">Monkey & Banana (€4.99) 🐒</span>
+                        </label>
                     </div>
                 </div>
                 <div>
@@ -926,7 +930,8 @@
             const themes = {
                 classic: { bg: null, textTitle: [43, 45, 66], textCat: [226, 149, 120], lineCat: [226, 149, 120], textItem: [43, 45, 66], border1: [226, 149, 120] },
                 pink: { bg: [255, 245, 247], textTitle: [74, 21, 37], textCat: [194, 24, 91], lineCat: [194, 24, 91], textItem: [74, 21, 37], border1: [244, 143, 177] },
-                boho: { bg: [250, 246, 239], textTitle: [43, 45, 66], textCat: [198, 110, 80], lineCat: [198, 110, 80], textItem: [43, 45, 66], border1: [226, 149, 120] }
+                boho: { bg: [250, 246, 239], textTitle: [43, 45, 66], textCat: [198, 110, 80], lineCat: [198, 110, 80], textItem: [43, 45, 66], border1: [226, 149, 120] },
+                monkey: { bg: [247, 250, 244], textTitle: [43, 45, 66], textCat: [76, 123, 58], lineCat: [76, 123, 58], textItem: [43, 45, 66], border1: [131, 197, 190] }
             };
             const cfg = themes[chosenTheme] || themes.classic;
             const templateAsset = themeImage(chosenTheme, isLandscape);
@@ -1439,7 +1444,8 @@
             const themes = [
                 { v: 'classic', label: 'Minimalist Classic' },
                 { v: 'pink', label: 'Ribbon & Strawberries 🍓' },
-                { v: 'boho', label: 'Boho Neutral ☀️' }
+                { v: 'boho', label: 'Boho Neutral ☀️' },
+                { v: 'monkey', label: 'Monkey & Banana 🐒' }
             ];
             container.innerHTML = themes.map(t => `
                 <label class="theme-card cursor-pointer block rounded-2xl border-2 ${t.v === selected ? 'border-clay' : 'border-transparent'} hover:border-clay/40 transition-all p-1.5 bg-gray-50" data-theme-card="${t.v}">
@@ -1669,7 +1675,8 @@
             const LS_CHECKOUT_URLS = {
                 classic: '',
                 pink: '',
-                boho: ''
+                boho: '',
+                monkey: ''
             };
             let pendingOrder = null;
 
