@@ -1666,17 +1666,17 @@
             document.querySelectorAll('input[name="pdf-orientation"]').forEach(r => r.addEventListener('change', renderThemeSelector));
             document.querySelectorAll('input[name="pdf-mode"]').forEach(r => r.addEventListener('change', renderThemeSelector));
 
-            // SINGLE poster button: direct in-browser PDF download (no Lemon Squeezy, no fake payment)
-            // ===== Lemon Squeezy overlay checkout =====
-            // FREE DOWNLOAD MODE for now: all '' → clicking just downloads the PDF (no payment).
-            // To turn payments back on, restore the real URLs below:
-            //   classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e'
-            //   pink/sage/blue: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25'
+            // ===== Lemon Squeezy overlay checkout (LIVE) =====
+            // Payment is collected by Lemon Squeezy; the personalized PDF is generated client-side
+            // on Checkout.Success (see deliverTracker). So each link only needs to charge the right price.
+            //   classic     → €3.99 product
+            //   pink/boho/monkey → €4.99 product (shared; the theme decides what PDF is drawn)
+            // To go back to free-download testing, set any value to '' .
             const LS_CHECKOUT_URLS = {
-                classic: '',
-                pink: '',
-                boho: '',
-                monkey: ''
+                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e',
+                pink:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
+                boho:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
+                monkey:  'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25'
             };
             let pendingOrder = null;
 
