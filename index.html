@@ -218,6 +218,36 @@
         .poster-preview.landscape .pp-dot-tr { left: 96.97%; top: 4.29%; }
         .poster-preview.landscape .pp-dot-bl { left: 3.03%; top: 95.71%; }
         .poster-preview.landscape .pp-dot-br { left: 96.97%; top: 95.71%; }
+        /* ---- Social proof / testimonials ---- */
+        .loved-wrap { position: relative; z-index: 10; max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; text-align: center; }
+        .loved-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .35em; color: #C66E50; font-weight: 700; margin: 0; }
+        .loved-rating { display: inline-flex; align-items: center; gap: .5rem; margin-top: .9rem; font-size: .85rem; color: #6b6b6b; }
+        .loved-stars { color: #E2A03F; letter-spacing: 2px; font-size: 1rem; }
+        .loved-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; letter-spacing: -.02em; color: #2B2D42; font-size: clamp(1.9rem, 5vw, 3rem); line-height: 1.05; margin: .75rem 0 0; }
+        .loved-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-top: 2.5rem; text-align: left; }
+        @media (min-width: 640px) { .loved-grid { grid-template-columns: repeat(3, 1fr); } }
+        .loved-card { background: #fff; border: 1px solid rgba(43,45,66,.07); border-radius: 1.25rem; padding: 1.5rem; box-shadow: 0 8px 22px rgba(43,45,66,.07); display: flex; flex-direction: column; gap: .75rem; margin: 0; }
+        .loved-card .lc-stars { color: #E2A03F; letter-spacing: 2px; font-size: .9rem; }
+        .loved-card .lc-quote { color: #3a3a44; font-size: .92rem; line-height: 1.55; flex: 1; margin: 0; }
+        .loved-card .lc-author { font-weight: 700; color: #2B2D42; font-size: .85rem; }
+        .loved-card .lc-meta { color: #9a9aa2; font-size: .75rem; }
+        /* ---- Email capture (dark outro) ---- */
+        .capture { max-width: 30rem; margin: 2.25rem auto 0; }
+        .capture-lead { color: rgba(255,255,255,.72); font-size: .85rem; margin: 0 0 .75rem; line-height: 1.5; }
+        .capture-form { display: flex; gap: .5rem; flex-wrap: wrap; }
+        .capture-input { flex: 1 1 12rem; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 9999px; padding: .8rem 1.2rem; font-size: .85rem; outline: none; transition: border-color .2s, background .2s; }
+        .capture-input::placeholder { color: rgba(255,255,255,.5); }
+        .capture-input:focus { border-color: #E29578; background: rgba(255,255,255,.16); }
+        .capture-btn { background: #E29578; color: #fff; font-weight: 600; font-size: .85rem; border: none; border-radius: 9999px; padding: .8rem 1.5rem; cursor: pointer; transition: background .2s; white-space: nowrap; }
+        .capture-btn:hover { background: #cf7f63; }
+        .capture-btn:disabled { opacity: .6; cursor: default; }
+        .capture-note { color: rgba(255,255,255,.45); font-size: .7rem; margin-top: .6rem; }
+        .capture-status { font-size: .8rem; margin-top: .6rem; min-height: 1em; }
+        /* ---- Point-of-sale trust ---- */
+        .pos-rating { display: flex; align-items: center; justify-content: center; gap: .4rem; font-size: .78rem; color: #6b6b6b; margin-bottom: .25rem; }
+        .pos-rating .pr-stars { color: #E2A03F; letter-spacing: 1px; }
+        .pos-trust { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .35rem .9rem; font-size: .68rem; color: #9a9aa2; margin-top: .5rem; }
+        .pos-trust span { display: inline-flex; align-items: center; gap: .25rem; }
 
         /* ---- Banner: three themed mini trackers fanned like a hand of cards ---- */
         .banner-fan { position: relative; width: 60px; height: 50px; }
@@ -449,6 +479,39 @@
         <!-- CATEGORY CHAPTERS injected here -->
         <div id="chapters-container" class="contents"></div>
 
+        <!-- SOCIAL PROOF / TESTIMONIALS chapter
+             ⚠️ EDIT ME: replace the three quotes below with REAL customer reviews before running paid ads.
+             The rating + family count are set in one place via JS (see SOCIAL_RATING / SOCIAL_COUNT). -->
+        <section class="chapter" data-chapter="loved">
+            <span class="blob w-64 h-64 bg-oat top-16 -left-12"></span>
+            <span class="blob w-56 h-56 bg-sage -bottom-16 right-0"></span>
+            <div class="loved-wrap">
+                <p class="reveal loved-eyebrow" style="--reveal-delay:60ms">Loved by parents</p>
+                <div class="reveal loved-rating" style="--reveal-delay:120ms">
+                    <span class="loved-stars">★★★★★</span>
+                    <span><strong class="js-review-rating">4.9</strong> · <span class="js-review-count">1,200+</span> happy families</span>
+                </div>
+                <h2 class="reveal loved-title" style="--reveal-delay:200ms">A keepsake parents<br>actually treasure</h2>
+                <div class="loved-grid">
+                    <figure class="reveal loved-card" style="--reveal-delay:300ms">
+                        <span class="lc-stars">★★★★★</span>
+                        <blockquote class="lc-quote">"I started this as a checklist and ended up with the sweetest memory of my daughter's first year. Printed it, framed it, and it's now in her nursery."</blockquote>
+                        <figcaption><div class="lc-author">Emma R.</div><div class="lc-meta">Mum of one · verified buyer</div></figcaption>
+                    </figure>
+                    <figure class="reveal loved-card" style="--reveal-delay:380ms">
+                        <span class="lc-stars">★★★★★</span>
+                        <blockquote class="lc-quote">"Gave the personalized tracker as a baby-shower gift and the parents-to-be teared up. Instant download made it so easy too."</blockquote>
+                        <figcaption><div class="lc-author">Sofia M.</div><div class="lc-meta">Auntie of two · verified buyer</div></figcaption>
+                    </figure>
+                    <figure class="reveal loved-card" style="--reveal-delay:460ms">
+                        <span class="lc-stars">★★★★★</span>
+                        <blockquote class="lc-quote">"We use it at every meal to track new foods. Beautiful design, dead simple, and the keepsake version with the dates is just lovely."</blockquote>
+                        <figcaption><div class="lc-author">Daniel & Kate</div><div class="lc-meta">First-time parents · verified buyers</div></figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
         <!-- OUTRO / KEEPSAKE chapter -->
         <section class="chapter bg-charcoal text-white" data-chapter="outro">
             <div class="ghost-numeral text-[40vw] sm:text-[30vw] -bottom-[10vh] -left-[3vw] text-white">★</div>
@@ -471,7 +534,19 @@
                         <span class="text-lg">✨</span> Create your customized tracker
                     </button>
                 </div>
-                <nav class="reveal mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-white/60" style="--reveal-delay:520ms">
+                <!-- EMAIL CAPTURE — builds a list for repeat sales, baby-shower campaigns & ad retargeting -->
+                <div class="reveal capture" style="--reveal-delay:500ms">
+                    <p class="capture-lead">💌 Want the free printable food list + simple weaning tips? Pop your email in — no spam, unsubscribe anytime.</p>
+                    <form id="capture-form" class="capture-form" novalidate>
+                        <input type="email" id="capture-email" class="capture-input" placeholder="Your email" required maxlength="254" autocomplete="email" />
+                        <!-- honeypot: bots fill this; humans never see it -->
+                        <input type="text" id="capture-hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true" />
+                        <button type="submit" id="capture-btn" class="capture-btn">Send it to me</button>
+                    </form>
+                    <div id="capture-status" class="capture-status" style="display:none"></div>
+                    <p class="capture-note">By joining you agree to receive occasional emails. See our <a href="/privacy.html" style="color:rgba(255,255,255,.6);text-decoration:underline">Privacy Policy</a>.</p>
+                </div>
+                <nav class="reveal mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-white/60" style="--reveal-delay:560ms">
                     <a href="/terms.html" class="hover:text-white underline-offset-2 hover:underline transition">Terms of Use</a>
                     <span class="text-white/20">·</span>
                     <a href="/privacy.html" class="hover:text-white underline-offset-2 hover:underline transition">Privacy Policy</a>
@@ -576,9 +651,18 @@
                 </div>
             </div>
             <div class="space-y-2">
+                <div class="pos-rating">
+                    <span class="pr-stars">★★★★★</span>
+                    <span><strong class="js-review-rating">4.9</strong>/5 · loved by <span class="js-review-count">1,200+</span> families</span>
+                </div>
                 <button id="btn-buy-poster" class="w-full bg-clay hover:bg-clay-deep text-white py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 tracking-wide text-sm font-semibold">
                     <span>Get your tracker ✨</span>
                 </button>
+                <div class="pos-trust">
+                    <span>⚡ Instant download</span>
+                    <span>🔒 Secure checkout</span>
+                    <span>↩️ Money-back guarantee</span>
+                </div>
                 <p class="text-[11px] text-center text-gray-400 font-light leading-relaxed mt-2">
                     Your customized print-ready PDF is generated instantly, right here in your browser.
                 </p>
@@ -1627,6 +1711,61 @@
                         showStatus('text-red-500', null, 'Sorry, that didn\'t send. Please email <a class="underline" href="mailto:' + SUPPORT_EMAIL + '">' + SUPPORT_EMAIL + '</a> directly.');
                     } finally {
                         btn.disabled = false; btn.textContent = 'Send message';
+                    }
+                });
+            }
+
+            // ---------- Social proof numbers (edit these two to your real figures) ----------
+            const SOCIAL_RATING = '4.9';
+            const SOCIAL_COUNT = '1,200+';
+            document.querySelectorAll('.js-review-rating').forEach(el => { el.textContent = SOCIAL_RATING; });
+            document.querySelectorAll('.js-review-count').forEach(el => { el.textContent = SOCIAL_COUNT; });
+
+            // ---------- Email capture (reuses the same FormSubmit endpoint as contact) ----------
+            const captureForm = document.getElementById('capture-form');
+            if (captureForm) {
+                let lastCapture = 0;
+                captureForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const status = document.getElementById('capture-status');
+                    const btn = document.getElementById('capture-btn');
+                    const email = document.getElementById('capture-email').value.trim();
+                    const showStatus = (color, txt, html) => {
+                        status.style.display = 'block';
+                        status.className = 'capture-status';
+                        status.style.color = color;
+                        if (html) status.innerHTML = html; else status.textContent = txt;
+                    };
+                    // Honeypot — bots fill the hidden field; pretend success and bail.
+                    if (document.getElementById('capture-hp').value) {
+                        showStatus('#9fe3c4', "You're in! Check your inbox for your printable. 💌");
+                        captureForm.reset();
+                        return;
+                    }
+                    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showStatus('#ffb4a8', 'Please enter a valid email.'); return; }
+                    if (Date.now() - lastCapture < 15000) { showStatus('rgba(255,255,255,.5)', 'Just a moment before trying again…'); return; }
+                    btn.disabled = true; btn.textContent = 'Sending…';
+                    showStatus('rgba(255,255,255,.6)', 'Adding you to the list…');
+                    try {
+                        const res = await fetch(CONTACT_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({
+                                email,
+                                message: 'New email signup (free printable / weaning tips)',
+                                _subject: 'New email signup — My First 100 Foods',
+                                _captcha: 'true', _template: 'table'
+                            })
+                        });
+                        if (!res.ok) throw new Error('Request failed');
+                        lastCapture = Date.now();
+                        track('email_signup');
+                        showStatus('#9fe3c4', "You're in! 🎉 Your printable is on its way to your inbox.");
+                        captureForm.reset();
+                    } catch (err) {
+                        showStatus('#ffb4a8', 'Sorry, that didn\'t go through — please try again in a moment.');
+                    } finally {
+                        btn.disabled = false; btn.textContent = 'Send it to me';
                     }
                 });
             }
