@@ -1860,11 +1860,12 @@
             //   classic            → €3.99 "Minimalist" product
             //   pink/boho/monkey   → €4.99 "Personalized" product (shared; the theme decides what PDF is drawn)
             // To go back to free-download testing, set any value to '' .
+            // media=0 hides the product image, desc=0 hides the description (embed=1 added below for the overlay)
             const LS_CHECKOUT_URLS = {
-                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/1b9c1b61-517f-431b-839c-9fb96131b453', // €3.99 Minimalist
-                pink:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822', // €4.99 Personalized (shared)
-                boho:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822',
-                monkey:  'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822'
+                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/1b9c1b61-517f-431b-839c-9fb96131b453?media=0&desc=0', // €3.99 Minimalist
+                pink:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822?media=0&desc=0', // €4.99 Personalized (shared)
+                boho:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822?media=0&desc=0',
+                monkey:  'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822?media=0&desc=0'
             };
             let pendingOrder = null;
 
@@ -1916,8 +1917,8 @@
                 // PAID — open the Lemon Squeezy payment overlay; PDF is delivered on Checkout.Success
                 pendingOrder = order;
                 track('checkout_opened', { theme: order.theme, mode: order.filled ? 'keepsake' : 'blank' });
-                // embed=1 → overlay; media=0 → hide the product image on the checkout
-                const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1&media=0';
+                // embed=1 → overlay (media=0 & desc=0 are already on the base checkout URLs above)
+                const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1';
                 if (window.LemonSqueezy && window.LemonSqueezy.Url) {
                     window.LemonSqueezy.Url.Open(url);
                 } else {
