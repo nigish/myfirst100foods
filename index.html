@@ -671,7 +671,6 @@
                 <div class="pos-trust">
                     <span>⚡ Instant download</span>
                     <span>🔒 Secure checkout</span>
-                    <span>↩️ Money-back guarantee</span>
                 </div>
                 <p class="text-[11px] text-center text-gray-400 font-light leading-relaxed mt-2">
                     Your customized print-ready PDF is generated instantly, right here in your browser.
@@ -717,12 +716,12 @@
             <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 modal-close-btn" aria-label="Close">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <span class="inline-block px-3 py-1 bg-oat text-clay font-semibold text-[10px] tracking-wider uppercase rounded-full mb-3">Your tracker</span>
-            <h3 class="font-serif text-2xl sm:text-3xl font-medium text-charcoal mb-2">Look what you're creating</h3>
-            <p class="text-sm text-gray-500 font-light mb-5 leading-relaxed max-w-md mx-auto">Every food you tap brings you closer to a beautiful printable tracker — personalized with your little one's name, ready to print &amp; tick off. A few of the designs you can choose:</p>
+            <span class="inline-block px-3 py-1 bg-oat text-clay font-semibold text-[10px] tracking-wider uppercase rounded-full mb-3">All 100 tried 🎉</span>
+            <h3 class="font-serif text-2xl sm:text-3xl font-medium text-charcoal mb-2">You did it — all 100 foods!</h3>
+            <p class="text-sm text-gray-500 font-light mb-5 leading-relaxed max-w-md mx-auto">What a journey. Turn it into a keepsake you'll treasure — a beautiful printable tracker personalized with your little one's name <strong>and the date they first tried each food</strong>, ready to print &amp; frame. Choose your design:</p>
             <div id="keepsake-nudge-images" class="grid grid-cols-3 gap-3 mb-6"></div>
             <button id="btn-nudge-buy" class="w-full bg-clay hover:bg-clay-deep text-white font-semibold py-3.5 rounded-xl transition shadow-md tracking-wide text-sm flex items-center justify-center gap-2">
-                <span class="text-lg">✨</span> Get your customized tracker
+                <span class="text-lg">✨</span> Get your dated keepsake tracker
             </button>
             <button class="mt-3 text-xs text-gray-400 hover:text-charcoal transition modal-close-btn">Maybe later</button>
         </div>
@@ -1407,6 +1406,11 @@
             const interior = modal.querySelector('.transform');
             if (interior) interior.classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 400);
+            // After the 100% celebration is dismissed, surface the dated-keepsake buy nudge.
+            if (modal.id === 'modal-celebration' && nudgeAfterCelebration) {
+                nudgeAfterCelebration = false;
+                setTimeout(() => showKeepsakeNudge(), 450);
+            }
         }
 
         // Locate a food's {category, foodName} from its slug id
@@ -1578,7 +1582,7 @@
             if (stepLabel) stepLabel.textContent = filled ? '2. Choose your keepsake design' : '2. Choose your tracker design';
         }
 
-        // ---------- Keepsake buy-nudge (after a few foods tried) ----------
+        // ---------- Keepsake buy-nudge (only after ALL 100 foods are tried) ----------
         function showKeepsakeNudge() {
             track('keepsake_nudge_shown');
             const holder = document.getElementById('keepsake-nudge-images');
@@ -1589,23 +1593,30 @@
                     { v: 'boho', label: 'Woodland' },
                     { v: 'classic', label: 'Minimalist' }
                 ];
+                // filled=true → previews show the dated keepsake version, matching what they'll buy
                 holder.innerHTML = order.map(t => `
                     <figure class="m-0">
-                        ${previewHolder(t.v, name, 'p', false)}
+                        ${previewHolder(t.v, name, 'p', true)}
                         <figcaption class="text-[10px] text-gray-400 mt-1">${t.label}</figcaption>
                     </figure>`).join('');
-                hydratePreviews(holder, 'p', false);
+                hydratePreviews(holder, 'p', true);
             }
             openModal(document.getElementById('modal-keepsake-nudge'));
         }
-        let keepsakeNudgeShown = false; // in-memory only — resets on every page load/refresh
+        let keepsakeNudgeShown = false;    // in-memory only — resets on every page load/refresh
+        let nudgeAfterCelebration = false; // defer the nudge until the 100% celebration is dismissed
         function maybeShowKeepsakeNudge() {
             if (keepsakeNudgeShown) return;
-            if (calculateStats().triedCount < 3) return;
-            // don't stack on top of a milestone celebration
-            if (!document.getElementById('modal-celebration').classList.contains('hidden')) return;
+            const stats = calculateStats();
+            // Only nudge once EVERY food on the list has been tried — then offer the dated keepsake tracker.
+            if (stats.totalItems === 0 || stats.triedCount < stats.totalItems) return;
             keepsakeNudgeShown = true;
-            showKeepsakeNudge();
+            // The 100% milestone celebration fires on this same tick — wait for it to close so modals don't stack.
+            if (!document.getElementById('modal-celebration').classList.contains('hidden')) {
+                nudgeAfterCelebration = true;
+            } else {
+                showKeepsakeNudge();
+            }
         }
 
         // ============ SINGLE consolidated DOMContentLoaded ============
@@ -1661,9 +1672,11 @@
             document.getElementById('btn-open-poster-2').addEventListener('click', () => openModal(modalPremium));
             document.getElementById('btn-banner-poster').addEventListener('click', () => openModal(modalPremium));
 
-            // Keepsake nudge → open the poster modal
+            // Keepsake nudge → open the poster modal, pre-selecting the dated keepsake (they finished all 100)
             document.getElementById('btn-nudge-buy').addEventListener('click', () => {
                 closeModal(modalNudge);
+                const filledRadio = document.querySelector('input[name="pdf-mode"][value="filled"]');
+                if (filledRadio) filledRadio.checked = true;
                 setTimeout(() => openModal(modalPremium), 280);
             });
 
@@ -1903,7 +1916,8 @@
                 // PAID — open the Lemon Squeezy payment overlay; PDF is delivered on Checkout.Success
                 pendingOrder = order;
                 track('checkout_opened', { theme: order.theme, mode: order.filled ? 'keepsake' : 'blank' });
-                const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1';
+                // embed=1 → overlay; media=0 → hide the product image on the checkout
+                const url = checkoutUrl + (checkoutUrl.includes('?') ? '&' : '?') + 'embed=1&media=0';
                 if (window.LemonSqueezy && window.LemonSqueezy.Url) {
                     window.LemonSqueezy.Url.Open(url);
                 } else {
