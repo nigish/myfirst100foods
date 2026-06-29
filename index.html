@@ -1857,14 +1857,14 @@
             // ===== Lemon Squeezy overlay checkout (LIVE) =====
             // Payment is collected by Lemon Squeezy; the personalized PDF is generated client-side
             // on Checkout.Success (see deliverTracker). So each link only needs to charge the right price.
-            //   classic     → €3.99 product
-            //   pink/boho/monkey → €4.99 product (shared; the theme decides what PDF is drawn)
+            //   classic            → €3.99 "Minimalist" product
+            //   pink/boho/monkey   → €4.99 "Personalized" product (shared; the theme decides what PDF is drawn)
             // To go back to free-download testing, set any value to '' .
             const LS_CHECKOUT_URLS = {
-                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/925614ca-38e7-4bc6-83df-27447b5b112e',
-                pink:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
-                boho:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25',
-                monkey:  'https://myfirst100foods.lemonsqueezy.com/checkout/buy/454295d2-342d-405b-8fe4-f0dbb96adb25'
+                classic: 'https://myfirst100foods.lemonsqueezy.com/checkout/buy/1b9c1b61-517f-431b-839c-9fb96131b453', // €3.99 Minimalist
+                pink:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822', // €4.99 Personalized (shared)
+                boho:    'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822',
+                monkey:  'https://myfirst100foods.lemonsqueezy.com/checkout/buy/138f0600-d986-4a71-a46c-be9853804822'
             };
             let pendingOrder = null;
 
